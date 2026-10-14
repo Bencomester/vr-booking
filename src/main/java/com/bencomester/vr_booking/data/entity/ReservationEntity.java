@@ -29,6 +29,7 @@ public class ReservationEntity {
     @Column(nullable = false)
     private LocalDateTime endTime;
 
+    //TODO: Change to Enum
     @Column(nullable = false)
     private String status = "PENDING";
 }

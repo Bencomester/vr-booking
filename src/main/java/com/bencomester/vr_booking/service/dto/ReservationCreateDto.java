@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReservationCreateDto {
-    private Long id;
+    private Long userId;
     private Long headsetId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
