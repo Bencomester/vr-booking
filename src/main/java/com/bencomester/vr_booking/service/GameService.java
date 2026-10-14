@@ -1,13 +1,13 @@
 package com.bencomester.vr_booking.service;
 
-import com.bencomester.vr_booking.data.repository.GameRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import com.bencomester.vr_booking.service.dto.GameDto;
 
-@Service
-@RequiredArgsConstructor
-public class GameService {
+import java.util.List;
 
-    private final GameRepository gameRepository;
-
+public interface GameService {
+    List<GameDto> findAll();
+    GameDto findById(Long id);
+    GameDto save(GameDto gameDto);
+    GameDto update(Long id, GameDto gameDto);
+    void deleteById(Long id);
 }
