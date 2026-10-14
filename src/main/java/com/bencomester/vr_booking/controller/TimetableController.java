@@ -1,6 +1,6 @@
 package com.bencomester.vr_booking.controller;
 
-import com.bencomester.vr_booking.dto.TimetableResponseDto;
+import com.bencomester.vr_booking.service.dto.TimetableResponseDto;
 import com.bencomester.vr_booking.service.TimetableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

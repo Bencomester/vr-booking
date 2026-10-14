@@ -1,7 +1,7 @@
 package com.bencomester.vr_booking.controller;
 
-import com.bencomester.vr_booking.entity.GameEntity;
-import com.bencomester.vr_booking.repository.GameRepository;
+import com.bencomester.vr_booking.data.entity.GameEntity;
+import com.bencomester.vr_booking.data.repository.GameRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

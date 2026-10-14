@@ -1,10 +1,10 @@
 package com.bencomester.vr_booking.service;
 
-import com.bencomester.vr_booking.dto.TimetableResponseDto;
-import com.bencomester.vr_booking.entity.AvailabilityEntity;
-import com.bencomester.vr_booking.entity.ReservationEntity;
-import com.bencomester.vr_booking.repository.AvailabilityRepository;
-import com.bencomester.vr_booking.repository.ReservationRepository;
+import com.bencomester.vr_booking.service.dto.TimetableResponseDto;
+import com.bencomester.vr_booking.data.entity.AvailabilityEntity;
+import com.bencomester.vr_booking.data.entity.ReservationEntity;
+import com.bencomester.vr_booking.data.repository.AvailabilityRepository;
+import com.bencomester.vr_booking.data.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

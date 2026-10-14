@@ -1,4 +1,4 @@
-package com.bencomester.vr_booking.entity;
+package com.bencomester.vr_booking.data.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,7 +25,7 @@ public class UserEntity {
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
-    
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_role",

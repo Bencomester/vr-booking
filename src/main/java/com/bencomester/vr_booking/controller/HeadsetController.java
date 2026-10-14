@@ -1,7 +1,7 @@
 package com.bencomester.vr_booking.controller;
 
-import com.bencomester.vr_booking.entity.HeadsetEntity;
-import com.bencomester.vr_booking.repository.HeadsetRepository;
+import com.bencomester.vr_booking.data.entity.HeadsetEntity;
+import com.bencomester.vr_booking.data.repository.HeadsetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,6 +1,6 @@
-package com.bencomester.vr_booking.repository;
+package com.bencomester.vr_booking.data.repository;
 
-import com.bencomester.vr_booking.entity.HeadsetEntity;
+import com.bencomester.vr_booking.data.entity.HeadsetEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

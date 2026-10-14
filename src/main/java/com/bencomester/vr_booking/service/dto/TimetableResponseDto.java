@@ -1,4 +1,4 @@
-package com.bencomester.vr_booking.dto;
+package com.bencomester.vr_booking.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
