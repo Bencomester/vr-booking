@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.data.entity;
 
+import com.bencomester.vr_booking.data.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,5 +13,5 @@ public class RoleEntity {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String name;
+    private UserRole name;
 }
