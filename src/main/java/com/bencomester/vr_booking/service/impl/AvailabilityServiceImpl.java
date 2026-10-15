@@ -37,14 +37,22 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     @Override
     public AvailabilityDto update(Long id, AvailabilityDto availabilityDto) {
+        validateTimes(availabilityDto);
         AvailabilityEntity existing = availabilityRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No available time found with id: " + id));
-        
+        existing.setStartTime(availabilityDto.getStartTime());
+        existing.setEndTime(availabilityDto.getEndTime());
         return availabilityMapper.toDto(availabilityRepository.save(existing));
     }
 
     @Override
     public void deleteById(Long id) {
         availabilityRepository.deleteById(id);
+    }
+
+    private void validateTimes(AvailabilityDto dto) {
+        if (dto.getStartTime() == null || dto.getEndTime() == null || !dto.getStartTime().isBefore(dto.getEndTime())) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
     }
 }

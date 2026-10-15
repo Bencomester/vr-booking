@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.data.entity;
 
+import com.bencomester.vr_booking.data.enums.HeadsetStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.HashSet;
@@ -21,7 +22,9 @@ public class HeadsetEntity {
 
     private Double hourlyPrice;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private HeadsetStatus status = HeadsetStatus.AVAILABLE;
 
     @ManyToMany
     @JoinTable(

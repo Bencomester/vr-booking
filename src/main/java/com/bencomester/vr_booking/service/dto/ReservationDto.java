@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.service.dto;
 
+import com.bencomester.vr_booking.data.enums.ReservationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ public class ReservationDto {
     private String userFullName;
     private Long headsetId;
     private String headsetName;
-    LocalDateTime startTime;
-    LocalDateTime endTime;
-    String status;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private ReservationStatus status;
 }

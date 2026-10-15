@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.data.entity;
 
+import com.bencomester.vr_booking.data.enums.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -29,7 +30,7 @@ public class ReservationEntity {
     @Column(nullable = false)
     private LocalDateTime endTime;
 
-    //TODO: Change to Enum
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status = "PENDING";
+    private ReservationStatus status = ReservationStatus.PENDING;
 }

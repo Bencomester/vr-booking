@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.service.dto;
 
+import com.bencomester.vr_booking.data.enums.HeadsetStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,6 @@ public class HeadsetDto {
     private Long id;
     private String name;
     private Double hourlyPrice;
-    private String status;
+    private HeadsetStatus status;
     private Set<GameDto> installedGames;
 }
