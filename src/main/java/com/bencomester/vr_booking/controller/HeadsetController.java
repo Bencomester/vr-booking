@@ -1,7 +1,7 @@
 package com.bencomester.vr_booking.controller;
 
-import com.bencomester.vr_booking.data.entity.HeadsetEntity;
-import com.bencomester.vr_booking.data.repository.HeadsetRepository;
+import com.bencomester.vr_booking.service.HeadsetService;
+import com.bencomester.vr_booking.service.dto.HeadsetDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,20 +12,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HeadsetController {
 
-    private final HeadsetRepository headsetRepository;
+    private final HeadsetService headsetService;
 
     @GetMapping
-    public List<HeadsetEntity> getAllHeadsets() {
-        return headsetRepository.findAll();
+    public List<HeadsetDto> getAllHeadsets() {
+        return headsetService.findAll();
     }
 
-    @GetMapping("/id")
-    public HeadsetEntity getHeadsetById(@RequestParam Long id) {
-        return headsetRepository.findById(id).orElse(new HeadsetEntity());
+    @GetMapping("/{id}")
+    public HeadsetDto getHeadsetById(@PathVariable Long id) {
+        return headsetService.findById(id);
     }
 
     @PostMapping
-    public HeadsetEntity createHeadset(@RequestBody HeadsetEntity headset) {
-        return headsetRepository.save(headset);
+    public HeadsetDto createHeadset(@RequestBody HeadsetDto headsetDto) {
+        return headsetService.save(headsetDto);
+    }
+
+    @PutMapping("/{id}")
+    public HeadsetDto updateHeadset(@PathVariable Long id, @RequestBody HeadsetDto dto) {
+        return headsetService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteHeadset(@PathVariable Long id) {
+        headsetService.deleteById(id);
     }
 }
