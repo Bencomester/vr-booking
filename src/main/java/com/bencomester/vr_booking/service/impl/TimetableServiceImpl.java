@@ -36,9 +36,16 @@ public class TimetableServiceImpl implements TimetableService {
         }
 
         rawAvailabilities.sort(Comparator.comparing(AvailabilityEntity::getStartTime));
-        List<TimeBlock> mergedAvailabilities = mergeRawAvailabilities(rawAvailabilities);
+        List<TimeBlock> availabilities = mergeRawAvailabilities(rawAvailabilities);
 
-        return new TimetableResponseDto(subtractReservationsFromMerged(mergedAvailabilities));
+        availabilities = subtractReservationsFromMerged(availabilities);
+
+        return new TimetableResponseDto(filterOutPastBlocks(availabilities));
+    }
+
+    private List<TimeBlock> filterOutPastBlocks(List<TimeBlock> availabilities) {
+        return availabilities.stream()
+                .filter(block -> block.getStartTime().isAfter(LocalDateTime.now())).toList();
     }
 
     private List<TimeBlock> subtractReservationsFromMerged(List<TimeBlock> mergedAvailabilities) {

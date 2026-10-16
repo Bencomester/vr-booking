@@ -5,6 +5,7 @@ import com.bencomester.vr_booking.service.ReservationService;
 import com.bencomester.vr_booking.service.dto.ReservationCreateDto;
 import com.bencomester.vr_booking.service.dto.ReservationDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,13 +18,13 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping
-    public ReservationDto createReservation(@RequestBody ReservationCreateDto reservationDto) {
-        return reservationService.makeReservation(reservationDto);
+    public ReservationDto createReservation(@RequestBody ReservationCreateDto reservationDto, Authentication authentication) {
+        return reservationService.makeReservation(reservationDto, authentication.getName());
     }
 
     @PostMapping("/{id}/cancel")
-    public ReservationDto cancelReservation(@PathVariable Long id) {
-        return reservationService.cancelReservation(id);
+    public ReservationDto cancelReservation(@PathVariable Long id, Authentication authentication) {
+        return reservationService.cancelReservation(id, authentication.getName());
     }
 
     @GetMapping

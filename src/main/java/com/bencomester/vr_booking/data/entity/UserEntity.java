@@ -19,7 +19,7 @@ public class UserEntity {
     private String passwordHash;
 
     private String fullName;
-    private String phone;
+    private String phoneNumber;
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

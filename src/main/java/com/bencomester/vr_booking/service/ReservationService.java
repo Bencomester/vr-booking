@@ -7,8 +7,8 @@ import com.bencomester.vr_booking.service.dto.ReservationDto;
 import java.util.List;
 
 public interface ReservationService {
-    ReservationDto makeReservation(ReservationCreateDto reservationDto);
-    ReservationDto cancelReservation(Long reservationId);
+    ReservationDto makeReservation(ReservationCreateDto reservationDto, String userEmail);
+    ReservationDto cancelReservation(Long reservationId, String userEmail);
     List<ReservationDto> findAll();
     ReservationDto findById(Long id);
     ReservationDto updateStatus(Long id, ReservationStatus status);

@@ -32,8 +32,9 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     @Override
     public AvailabilityDto save(AvailabilityDto availabilityDto) {
         validateTimes(availabilityDto);
-        AvailabilityEntity rigEntity = availabilityMapper.toEntity(availabilityDto);
-        return availabilityMapper.toDto(availabilityRepository.save(rigEntity));
+        AvailabilityEntity avail = availabilityMapper.toEntity(availabilityDto);
+        avail.setId(null);
+        return availabilityMapper.toDto(availabilityRepository.save(avail));
     }
 
     @Override
@@ -43,7 +44,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
                 .orElseThrow(() -> new IllegalArgumentException("No available time found with id: " + id));
         existing.setStartTime(availabilityDto.getStartTime());
         existing.setEndTime(availabilityDto.getEndTime());
-        existing.setId(null);
         return availabilityMapper.toDto(availabilityRepository.save(existing));
     }
 
