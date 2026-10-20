@@ -1,37 +1,62 @@
 package com.bencomester.vr_booking.config;
 
+import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 @RestControllerAdvice
-public class ExceptionHandlerConfig {
+public class ExceptionHandlerConfig implements ResponseBodyAdvice<Object> {
+
+    @Override
+    public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+        Class<?> type = returnType.getParameterType();
+        return !Response.class.isAssignableFrom(type)
+                && !ResponseEntity.class.isAssignableFrom(type)
+                && !StringHttpMessageConverter.class.isAssignableFrom(converterType);
+    }
+
+    @Override
+    public Object beforeBodyWrite(
+            Object body,
+            MethodParameter returnType,
+            MediaType selectedContentType,
+            Class<? extends HttpMessageConverter<?>> selectedConverterType,
+            ServerHttpRequest request,
+            ServerHttpResponse response) {
+
+        if (body instanceof Response) return body;
+
+        return Response.success(body);
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException exception) {
+    public ResponseEntity<Response<Void>> handleBadRequest(IllegalArgumentException exception) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.toString(), exception.getMessage());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException exception) {
+    public ResponseEntity<Response<Void>> handleBadCredentials(BadCredentialsException exception) {
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.toString(), exception.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException exception) {
+    public ResponseEntity<Response<Void>> handleAccessDenied(AccessDeniedException exception) {
         return buildErrorResponse(HttpStatus.FORBIDDEN, HttpStatus.FORBIDDEN.toString(), exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
+    public ResponseEntity<Response<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
         String message = exception.getBindingResult().getFieldErrors().stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .findFirst()
@@ -40,21 +65,11 @@ public class ExceptionHandlerConfig {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+    public ResponseEntity<Response<Void>> handleGenericException(Exception ex) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", ex.getMessage());
     }
 
-    private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String code, String message) {
-        Map<String, Object> errorDetails = new HashMap<>();
-        errorDetails.put("code", code);
-        errorDetails.put("message", message);
-        errorDetails.put("timestamp", LocalDateTime.now());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", false);
-        response.put("data", null);
-        response.put("error", errorDetails);
-
-        return new ResponseEntity<>(response, status);
+    private ResponseEntity<Response<Void>> buildErrorResponse(HttpStatus status, String code, String message) {
+        return new ResponseEntity<>(Response.failure(code, message), status);
     }
 }

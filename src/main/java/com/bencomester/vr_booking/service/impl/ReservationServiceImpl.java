@@ -110,7 +110,7 @@ public class ReservationServiceImpl implements ReservationService {
         ReservationEntity reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found."));
 
-        if (reservation.getUser().getId().equals(userId)) {
+        if (!reservation.getUser().getId().equals(userId)) {
             throw new AccessDeniedException("You can only cancel your own reservations.");
         }
 
