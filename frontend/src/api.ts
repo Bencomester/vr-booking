@@ -1,4 +1,4 @@
-const BASE_URL = '/api';
+const API_BASE = 'http://localhost:8080/vr/api';
 
 interface WrappedResponse<T> {
     success: boolean;
@@ -8,27 +8,31 @@ interface WrappedResponse<T> {
 }
 
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('vr_token');
 
     const headers: Record<string, string> = {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...(options.headers as Record<string, string>),
     };
 
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (token && token !== 'null' && token !== 'undefined') {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
         headers,
     });
 
     if (!response.ok) {
-        let errorMessage = `HTTP Error ${response.status}`;
+        let errorMessage = `HTTP Error ${response.status} on ${endpoint}`;
         try {
-            const err = await response.json();
-            if (err?.error?.message) errorMessage = err.error.message;
+            const errJson = (await response.json()) as WrappedResponse<T>;
+            if (errJson?.error?.message) {
+                errorMessage = errJson.error.message;
+            }
         } catch {
-            errorMessage = `HTTP Error ${response.status}`;
+            errorMessage = `HTTP Error ${response.status} on ${endpoint}`;
         }
         throw new Error(errorMessage);
     }

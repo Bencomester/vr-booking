@@ -2,10 +2,54 @@ export type HeadsetStatus = "Available" | "Maintenance" | "Coming Soon...";
 export type ReservationStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
 export type UserRole = "User" | "Admin";
 
+export type PageRoute =
+    | 'HOME'
+    | 'TIMETABLE'
+    | 'GAMES'
+    | 'HEADSETS'
+    | 'RIGS'
+    | 'ACCOUNT'
+    | 'ADMIN_AVAILABILITY'
+    | 'ADMIN_HEADSETS'
+    | 'ADMIN_GAMES'
+    | 'ADMIN_RIGS'
+    | 'ADMIN_RESERVATIONS';
+
+export const ROUTE_PATHS: Record<PageRoute, string> = {
+    HOME: '/',
+    TIMETABLE: '/timetable',
+    GAMES: '/games',
+    HEADSETS: '/headsets',
+    RIGS: '/rigs',
+    ACCOUNT: '/account',
+    ADMIN_AVAILABILITY: '/admin/availability',
+    ADMIN_HEADSETS: '/admin/headsets',
+    ADMIN_GAMES: '/admin/games',
+    ADMIN_RIGS: '/admin/rigs',
+    ADMIN_RESERVATIONS: '/admin/reservations',
+};
+
 export interface GameDto {
     id?: number;
     title: string;
     description: string;
+    steamAppId?: number;
+    imageUrl?: string;
+}
+
+export interface SteamGameDetailsDto {
+    appId: number;
+    name: string;
+    shortDescription: string;
+    aboutTheGame: string;
+    headerImage: string;
+    developers: string[];
+    publishers: string[];
+    releaseDate: string;
+    genres: string[];
+    metacriticScore?: number | null;
+    screenshots: string[];
+    website?: string;
 }
 
 export interface HeadsetDto {
@@ -13,13 +57,18 @@ export interface HeadsetDto {
     name: string;
     hourlyPrice: number;
     status: HeadsetStatus;
+    description?: string;
+    imageUrl?: string;
     installedGames: GameDto[];
 }
 
-export interface HeadsetCreateDto {
+export interface HeadsetUpdateDto {
+    id?: number;
     name: string;
     hourlyPrice: number;
     status: HeadsetStatus;
+    description?: string;
+    imageUrl?: string;
     gameIds: number[];
 }
 
@@ -29,7 +78,9 @@ export interface RigDto {
     cpu: string;
     gpu: string;
     ram: string;
-    description: string;
+    os: string;
+    imageUrl?: string;
+    description?: string;
 }
 
 export interface AvailabilityDto {
@@ -49,7 +100,6 @@ export interface TimetableResponseDto {
 }
 
 export interface ReservationCreateDto {
-    userId?: number;
     headsetId: number;
     startTime: string;
     endTime: string;
@@ -71,11 +121,25 @@ export interface UserDto {
     email: string;
     fullName: string;
     phoneNumber: string;
+    profilePictureUrl?: string;
     createdAt: string;
     role: UserRole;
+}
+
+export interface UserUpdateDto {
+    fullName: string;
+    phoneNumber: string;
+    profilePictureUrl?: string;
 }
 
 export interface AuthResponseDto {
     token: string;
     user: UserDto;
+}
+
+export interface WeekDayInfo {
+    iso: string;
+    dayName: string;
+    labelShort: string;
+    isToday: boolean;
 }
