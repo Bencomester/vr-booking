@@ -15,6 +15,7 @@ public class UserDto {
     private String email;
     private String fullName;
     private String phoneNumber;
+    private String profilePictureUrl;
     private LocalDateTime createdAt;
     private UserRole role;
 }

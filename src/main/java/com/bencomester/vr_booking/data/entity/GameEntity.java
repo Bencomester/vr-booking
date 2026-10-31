@@ -17,5 +17,11 @@ public class GameEntity {
     @Column(nullable = false)
     private String title;
 
+    @Column(length = 2000)
     private String description;
+
+    private Integer steamAppId;
+
+    @Column(length = 1000)
+    private String imageUrl;
 }

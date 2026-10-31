@@ -24,6 +24,9 @@ public class UserEntity {
     private String fullName;
     private String phoneNumber;
 
+    @Column(length = 1000)
+    private String profilePictureUrl;
+
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

@@ -20,7 +20,11 @@ public class RigEntity {
     private String cpu;
     private String gpu;
     private String ram;
+    private String os;
 
     @Column(length = 1000)
+    private String imageUrl;
+
+    @Column(length = 2000)
     private String description;
 }
