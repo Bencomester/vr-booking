@@ -2,6 +2,7 @@ package com.bencomester.vr_booking.controller;
 
 import com.bencomester.vr_booking.service.HeadsetService;
 import com.bencomester.vr_booking.service.dto.HeadsetDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,12 +26,12 @@ public class HeadsetController {
     }
 
     @PostMapping
-    public HeadsetDto createHeadset(@RequestBody HeadsetDto headsetDto) {
+    public HeadsetDto createHeadset(@Valid @RequestBody HeadsetDto headsetDto) {
         return headsetService.save(headsetDto);
     }
 
     @PutMapping("/{id}")
-    public HeadsetDto updateHeadset(@PathVariable Long id, @RequestBody HeadsetDto dto) {
+    public HeadsetDto updateHeadset(@PathVariable Long id, @Valid @RequestBody HeadsetDto dto) {
         return headsetService.update(id, dto);
     }
 

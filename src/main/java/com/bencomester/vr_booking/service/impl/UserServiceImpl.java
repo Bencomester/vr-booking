@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,11 +38,11 @@ public class UserServiceImpl implements UserService {
     private final ReservationMapper reservationMapper;
 
     @Override
+    @Transactional
     public AuthResponseDto register(RegisterRequestDto registerRequestDto) {
         if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
             throw new IllegalArgumentException("This email address is already in use");
         }
-
         RoleEntity userRole = roleRepository.findByName(UserRole.USER)
                 .orElseGet(() -> roleRepository.save(new RoleEntity(null, UserRole.USER)));
 
@@ -60,6 +61,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword())
@@ -75,18 +77,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDto getAccountDetails(String email) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
         return userMapper.toDto(user);
     }
 
     @Override
+    @Transactional
+    public UserDto updateAccountDetails(String email, UserUpdateDto userUpdateDto) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        user.setFullName(userUpdateDto.getFullName());
+        user.setPhoneNumber(userUpdateDto.getPhoneNumber());
+        user.setProfilePictureUrl(userUpdateDto.getProfilePictureUrl());
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ReservationDto> getUserReservations(String email) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
         return reservationMapper.toDto(reservationRepository.findAllByUser_id(user.getId()));
     }
 }

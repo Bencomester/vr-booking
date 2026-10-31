@@ -13,9 +13,11 @@ import com.bencomester.vr_booking.data.repository.AvailabilityRepository;
 import com.bencomester.vr_booking.data.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -29,6 +31,7 @@ public class TimetableServiceImpl implements TimetableService {
     private final HeadsetRepository headsetRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public TimetableResponseDto getAvailableTimetable() {
         List<AvailabilityEntity> rawAvailabilities = availabilityRepository.findAll();
         if (rawAvailabilities.isEmpty()) {
@@ -38,14 +41,48 @@ public class TimetableServiceImpl implements TimetableService {
         rawAvailabilities.sort(Comparator.comparing(AvailabilityEntity::getStartTime));
         List<TimeBlock> availabilities = mergeRawAvailabilities(rawAvailabilities);
 
+        availabilities = splitBlocksByDay(availabilities);
         availabilities = subtractReservationsFromMerged(availabilities);
 
         return new TimetableResponseDto(filterOutPastBlocks(availabilities));
     }
 
+    private List<TimeBlock> splitBlocksByDay(List<TimeBlock> blocks) {
+        List<TimeBlock> dailyBlocks = new ArrayList<>();
+        for (TimeBlock block : blocks) {
+            LocalDateTime cursor = block.getStartTime();
+            LocalDateTime end = block.getEndTime();
+            while (cursor.toLocalDate().isBefore(end.toLocalDate())) {
+                LocalDateTime endOfDay = cursor.toLocalDate().atTime(23, 59);
+                if (Duration.between(cursor, endOfDay).toMinutes() >= MIN_RESERVATION_LENGTH_IN_MINUTES) {
+                    dailyBlocks.add(new TimeBlock(cursor, endOfDay, block.getHeadsetId()));
+                }
+                cursor = cursor.toLocalDate().plusDays(1).atStartOfDay();
+            }
+            if (Duration.between(cursor, end).toMinutes() >= MIN_RESERVATION_LENGTH_IN_MINUTES) {
+                dailyBlocks.add(new TimeBlock(cursor, end, block.getHeadsetId()));
+            }
+        }
+        return dailyBlocks;
+    }
+
     private List<TimeBlock> filterOutPastBlocks(List<TimeBlock> availabilities) {
-        return availabilities.stream()
-                .filter(block -> block.getStartTime().isAfter(LocalDateTime.now())).toList();
+        LocalDateTime rawNow = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        int minute = rawNow.getMinute();
+        int remainder = minute % 15;
+        LocalDateTime roundedNow = remainder == 0 ? rawNow : rawNow.plusMinutes(15 - remainder);
+
+        List<TimeBlock> result = new ArrayList<>();
+        for (TimeBlock block : availabilities) {
+            if (!block.getEndTime().isAfter(roundedNow)) {
+                continue;
+            }
+            LocalDateTime effectiveStart = block.getStartTime().isBefore(roundedNow) ? roundedNow : block.getStartTime();
+            if (Duration.between(effectiveStart, block.getEndTime()).toMinutes() >= MIN_RESERVATION_LENGTH_IN_MINUTES) {
+                result.add(new TimeBlock(effectiveStart, block.getEndTime(), block.getHeadsetId()));
+            }
+        }
+        return result;
     }
 
     private List<TimeBlock> subtractReservationsFromMerged(List<TimeBlock> mergedAvailabilities) {
@@ -89,7 +126,6 @@ public class TimetableServiceImpl implements TimetableService {
 
     private List<TimeBlock> mergeRawAvailabilities(List<AvailabilityEntity> rawAvailabilities) {
         List<TimeBlock> mergedAvailabilities = new ArrayList<>();
-
         TimeBlock current = getTimeBlock(rawAvailabilities.getFirst());
 
         for (int i = 1; i < rawAvailabilities.size(); i++) {

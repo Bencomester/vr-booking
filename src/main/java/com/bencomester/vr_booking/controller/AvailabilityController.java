@@ -2,6 +2,7 @@ package com.bencomester.vr_booking.controller;
 
 import com.bencomester.vr_booking.service.AvailabilityService;
 import com.bencomester.vr_booking.service.dto.AvailabilityDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,12 +26,12 @@ public class AvailabilityController {
     }
 
     @PostMapping
-    public AvailabilityDto createAvailability(@RequestBody AvailabilityDto availabilityDto) {
+    public AvailabilityDto createAvailability(@Valid @RequestBody AvailabilityDto availabilityDto) {
         return availabilityService.save(availabilityDto);
     }
 
     @PutMapping("/{id}")
-    public AvailabilityDto updateAvailability(@PathVariable Long id, @RequestBody AvailabilityDto availabilityDto) {
+    public AvailabilityDto updateAvailability(@PathVariable Long id, @Valid @RequestBody AvailabilityDto availabilityDto) {
         return availabilityService.update(id, availabilityDto);
     }
 

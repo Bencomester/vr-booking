@@ -8,5 +8,6 @@ public interface UserService {
     AuthResponseDto register(RegisterRequestDto registerRequestDto);
     AuthResponseDto login(LoginRequestDto loginRequestDto);
     UserDto getAccountDetails(String email);
+    UserDto updateAccountDetails(String email, UserUpdateDto updateDto);
     List<ReservationDto> getUserReservations(String email);
 }

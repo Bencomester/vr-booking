@@ -7,6 +7,7 @@ import com.bencomester.vr_booking.service.dto.AvailabilityDto;
 import com.bencomester.vr_booking.service.mapper.AvailabilityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,11 +19,13 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     private final AvailabilityMapper availabilityMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<AvailabilityDto> findAll() {
         return availabilityMapper.toDto(availabilityRepository.findAll());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AvailabilityDto findById(Long id) {
         return availabilityRepository.findById(id)
                 .map(availabilityMapper::toDto)
@@ -30,6 +33,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     @Override
+    @Transactional
     public AvailabilityDto save(AvailabilityDto availabilityDto) {
         validateTimes(availabilityDto);
         AvailabilityEntity avail = availabilityMapper.toEntity(availabilityDto);
@@ -38,6 +42,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     @Override
+    @Transactional
     public AvailabilityDto update(Long id, AvailabilityDto availabilityDto) {
         validateTimes(availabilityDto);
         AvailabilityEntity existing = availabilityRepository.findById(id)
@@ -48,6 +53,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
         availabilityRepository.deleteById(id);
     }

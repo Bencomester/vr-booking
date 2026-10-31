@@ -17,6 +17,7 @@ import com.bencomester.vr_booking.service.mapper.ReservationMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationMapper reservationMapper;
 
     @Override
+    @Transactional
     public ReservationDto makeReservation(ReservationCreateDto reservationDto, String userEmail) {
         testMinimumDuration(reservationDto.getStartTime(), reservationDto.getEndTime());
 
@@ -61,10 +63,10 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private HeadsetEntity getHeadsetEntityOrThrow(Long headsetId) {
-        HeadsetEntity headsetEntity = headsetRepository.findById(headsetId)
+        HeadsetEntity headsetEntity = headsetRepository.findByIdForUpdate(headsetId)
                 .orElseThrow(() -> new IllegalArgumentException("Headset not found."));
 
-        if(headsetEntity.getStatus().equals(HeadsetStatus.AVAILABLE)) return headsetEntity;
+        if (headsetEntity.getStatus().equals(HeadsetStatus.AVAILABLE)) return headsetEntity;
 
         throw new IllegalArgumentException("Headset is currently unavailable.");
     }
@@ -80,19 +82,42 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public ReservationDto cancelReservation(Long reservationId, String userEmail) {
         UserEntity caller = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
-        return updateStatus(reservationId, ReservationStatus.CANCELLED, caller.getId());
+        ReservationEntity reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found."));
+        boolean isOwner = reservation.getUser().getId().equals(caller.getId());
+        boolean isAdmin = caller.getRole() != null && caller.getRole().getName() == UserRole.ADMIN;
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("You can only cancel your own reservations.");
+        }
+        return updateStatus(reservation, ReservationStatus.CANCELLED);
     }
 
     @Override
-    public List<ReservationDto> findAll() {
+    @Transactional(readOnly = true)
+    public List<ReservationDto> findAll(String userEmail) {
+        UserEntity caller = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        if (caller.getRole() == null || caller.getRole().getName() != UserRole.ADMIN) {
+            throw new AccessDeniedException("You can only modify your own reservations.");
+        }
         return reservationMapper.toDto(reservationRepository.findAll());
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ReservationDto> findAllByUser(String userEmail) {
+        Long userId = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."))
+                .getId();
+        return reservationMapper.toDto(reservationRepository.findAllByUser_id(userId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ReservationDto findById(Long id) {
         return reservationRepository.findById(id)
                 .map(reservationMapper::toDto)
@@ -100,20 +125,17 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationDto updateStatus(Long id, ReservationStatus status) {
+    @Transactional
+    public ReservationDto updateStatus(Long id, ReservationStatus status, String userEmail) {
+        UserEntity caller = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
         ReservationEntity reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found."));
-        return updateStatus(reservation, status);
-    }
-
-    private ReservationDto updateStatus(Long id, ReservationStatus status, Long userId) {
-        ReservationEntity reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Reservation not found."));
-
-        if (!reservation.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("You can only cancel your own reservations.");
+        boolean isOwner = reservation.getUser().getId().equals(caller.getId());
+        boolean isAdmin = caller.getRole() != null && caller.getRole().getName() == UserRole.ADMIN;
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("You can only modify your own reservations.");
         }
-
         return updateStatus(reservation, status);
     }
 
@@ -123,6 +145,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
         reservationRepository.deleteById(id);
     }

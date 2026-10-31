@@ -7,6 +7,7 @@ import com.bencomester.vr_booking.service.dto.RigDto;
 import com.bencomester.vr_booking.service.mapper.RigMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,11 +19,13 @@ public class RigServiceImpl implements RigService {
     private final RigMapper rigMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<RigDto> findAll() {
         return rigMapper.toDto(rigRepository.findAll());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RigDto findById(Long id) {
         return rigRepository.findById(id)
                 .map(rigMapper::toDto)
@@ -30,12 +33,15 @@ public class RigServiceImpl implements RigService {
     }
 
     @Override
+    @Transactional
     public RigDto save(RigDto rigDto) {
         RigEntity rigEntity = rigMapper.toEntity(rigDto);
+        rigEntity.setId(null);
         return rigMapper.toDto(rigRepository.save(rigEntity));
     }
 
     @Override
+    @Transactional
     public RigDto update(Long id, RigDto rigDto) {
         RigEntity existing = rigRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No Rig found with id: " + id));
@@ -43,11 +49,14 @@ public class RigServiceImpl implements RigService {
         existing.setCpu(rigDto.getCpu());
         existing.setGpu(rigDto.getGpu());
         existing.setRam(rigDto.getRam());
+        existing.setOs(rigDto.getOs());
+        existing.setImageUrl(rigDto.getImageUrl());
         existing.setDescription(rigDto.getDescription());
         return rigMapper.toDto(rigRepository.save(existing));
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
         rigRepository.deleteById(id);
     }

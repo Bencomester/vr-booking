@@ -2,6 +2,7 @@ package com.bencomester.vr_booking.controller;
 
 import com.bencomester.vr_booking.service.RigService;
 import com.bencomester.vr_booking.service.dto.RigDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,12 +26,12 @@ public class RigController {
     }
 
     @PostMapping
-    public RigDto createRig(@RequestBody RigDto dto) {
+    public RigDto createRig(@Valid @RequestBody RigDto dto) {
         return rigService.save(dto);
     }
 
     @PutMapping("/{id}")
-    public RigDto updateRig(@PathVariable Long id, @RequestBody RigDto dto) {
+    public RigDto updateRig(@PathVariable Long id, @Valid @RequestBody RigDto dto) {
         return rigService.update(id, dto);
     }
 
