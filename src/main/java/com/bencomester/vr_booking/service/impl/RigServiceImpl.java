@@ -2,6 +2,7 @@ package com.bencomester.vr_booking.service.impl;
 
 import com.bencomester.vr_booking.data.entity.RigEntity;
 import com.bencomester.vr_booking.data.repository.RigRepository;
+import com.bencomester.vr_booking.exception.ResourceNotFoundException;
 import com.bencomester.vr_booking.service.RigService;
 import com.bencomester.vr_booking.service.dto.RigDto;
 import com.bencomester.vr_booking.service.mapper.RigMapper;
@@ -29,7 +30,7 @@ public class RigServiceImpl implements RigService {
     public RigDto findById(Long id) {
         return rigRepository.findById(id)
                 .map(rigMapper::toDto)
-                .orElseThrow(() -> new IllegalArgumentException("No Rig found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No Rig found with id: " + id));
     }
 
     @Override
@@ -44,7 +45,7 @@ public class RigServiceImpl implements RigService {
     @Transactional
     public RigDto update(Long id, RigDto rigDto) {
         RigEntity existing = rigRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No Rig found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No Rig found with id: " + id));
         existing.setName(rigDto.getName());
         existing.setCpu(rigDto.getCpu());
         existing.setGpu(rigDto.getGpu());
@@ -58,6 +59,9 @@ public class RigServiceImpl implements RigService {
     @Override
     @Transactional
     public void deleteById(Long id) {
+        if (!rigRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No Rig found with id: " + id);
+        }
         rigRepository.deleteById(id);
     }
 }

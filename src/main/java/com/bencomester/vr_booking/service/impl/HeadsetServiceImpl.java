@@ -2,9 +2,9 @@ package com.bencomester.vr_booking.service.impl;
 
 import com.bencomester.vr_booking.data.entity.HeadsetEntity;
 import com.bencomester.vr_booking.data.entity.ReservationEntity;
-import com.bencomester.vr_booking.data.enums.ReservationStatus;
 import com.bencomester.vr_booking.data.repository.HeadsetRepository;
 import com.bencomester.vr_booking.data.repository.ReservationRepository;
+import com.bencomester.vr_booking.exception.ResourceNotFoundException;
 import com.bencomester.vr_booking.service.HeadsetService;
 import com.bencomester.vr_booking.service.dto.HeadsetDto;
 import com.bencomester.vr_booking.service.mapper.GameMapper;
@@ -35,7 +35,7 @@ public class HeadsetServiceImpl implements HeadsetService {
     public HeadsetDto findById(Long id) {
         return headsetRepository.findById(id)
                 .map(headsetMapper::toDto)
-                .orElseThrow(() -> new IllegalArgumentException("No Headset found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No Headset found with id: " + id));
     }
 
     @Override
@@ -50,7 +50,7 @@ public class HeadsetServiceImpl implements HeadsetService {
     @Transactional
     public HeadsetDto update(Long id, HeadsetDto headsetDto) {
         HeadsetEntity existing = headsetRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No Headset found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No Headset found with id: " + id));
         existing.setName(headsetDto.getName());
         existing.setHourlyPrice(headsetDto.getHourlyPrice());
         existing.setStatus(headsetDto.getStatus());
@@ -63,6 +63,9 @@ public class HeadsetServiceImpl implements HeadsetService {
     @Override
     @Transactional
     public void deleteById(Long id) {
+        if (!headsetRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No Headset found with id: " + id);
+        }
         List<ReservationEntity> reservations = reservationRepository.findAllByHeadset_id(id);
         reservationRepository.deleteAll(reservations);
         headsetRepository.deleteById(id);

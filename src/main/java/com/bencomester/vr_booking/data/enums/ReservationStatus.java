@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.data.enums;
 
+import com.bencomester.vr_booking.exception.InvalidInputException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -28,6 +29,6 @@ public enum ReservationStatus {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown ReservationStatus: " + value);
+        throw new InvalidInputException("Unknown ReservationStatus: " + value);
     }
 }

@@ -4,6 +4,9 @@ import com.bencomester.vr_booking.data.entity.GameEntity;
 import com.bencomester.vr_booking.data.entity.HeadsetEntity;
 import com.bencomester.vr_booking.data.repository.GameRepository;
 import com.bencomester.vr_booking.data.repository.HeadsetRepository;
+import com.bencomester.vr_booking.exception.ExternalServiceException;
+import com.bencomester.vr_booking.exception.InvalidInputException;
+import com.bencomester.vr_booking.exception.ResourceNotFoundException;
 import com.bencomester.vr_booking.service.GameService;
 import com.bencomester.vr_booking.service.dto.GameDto;
 import com.bencomester.vr_booking.service.dto.SteamGameDetailsDto;
@@ -45,7 +48,7 @@ public class GameServiceImpl implements GameService {
     public GameDto findById(Long id) {
         return gameRepository.findById(id)
                 .map(gameMapper::toDto)
-                .orElseThrow(() -> new IllegalArgumentException("No Game found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No Game found with id: " + id));
     }
 
     @Override
@@ -62,7 +65,7 @@ public class GameServiceImpl implements GameService {
     public GameDto update(Long id, GameDto gameDto) {
         applySteamDefaultImage(gameDto);
         GameEntity existing = gameRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No Game found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No Game found with id: " + id));
         existing.setTitle(gameDto.getTitle());
         existing.setDescription(gameDto.getDescription());
         existing.setSteamAppId(gameDto.getSteamAppId());
@@ -73,6 +76,9 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public void deleteById(Long id) {
+        if (!gameRepository.existsById(id)) {
+            throw new ResourceNotFoundException("No Game found with id: " + id);
+        }
         List<HeadsetEntity> headsets = headsetRepository.findAll();
         for (HeadsetEntity headset : headsets) {
             if (headset.getInstalledGames().removeIf(g -> g.getId().equals(id))) {
@@ -87,7 +93,7 @@ public class GameServiceImpl implements GameService {
     public SteamGameDetailsDto fetchSteamGameDetails(String appId) {
         String id = appId == null ? "" : appId.trim();
         if (id.isEmpty() || !id.matches("\\d+")) {
-            throw new IllegalArgumentException("Invalid Steam App ID: " + id);
+            throw new InvalidInputException("Invalid numeric Steam App ID: " + id);
         }
         try {
             String url = "https://store.steampowered.com/api/appdetails?appids=" + id + "&l=english";
@@ -100,7 +106,7 @@ public class GameServiceImpl implements GameService {
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode appNode = root.path(id);
             if (!appNode.path("success").asBoolean(false)) {
-                throw new IllegalArgumentException("Steam App ID " + id + " not found on Steam.");
+                throw new ResourceNotFoundException("Steam App ID " + id + " was not found on the Steam Store.");
             }
             JsonNode data = appNode.path("data");
             List<String> developers = new ArrayList<>();
@@ -137,10 +143,13 @@ public class GameServiceImpl implements GameService {
                     screenshots,
                     data.path("website").asText("")
             );
-        } catch (IllegalArgumentException e) {
+        } catch (ResourceNotFoundException | InvalidInputException e) {
             throw e;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ExternalServiceException("Steam API request was interrupted", e);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to fetch Steam API details: " + e.getMessage());
+            throw new ExternalServiceException("Failed to fetch Steam Store API details: " + e.getMessage(), e);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.data.enums;
 
+import com.bencomester.vr_booking.exception.InvalidInputException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -26,6 +27,6 @@ public enum UserRole {
                 return role;
             }
         }
-        throw new IllegalArgumentException("Unknown UserRole: " + value);
+        throw new InvalidInputException("Unknown UserRole: " + value);
     }
 }

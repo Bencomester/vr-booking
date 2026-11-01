@@ -8,6 +8,9 @@ import com.bencomester.vr_booking.data.enums.UserRole;
 import com.bencomester.vr_booking.data.repository.ReservationRepository;
 import com.bencomester.vr_booking.data.repository.RoleRepository;
 import com.bencomester.vr_booking.data.repository.UserRepository;
+import com.bencomester.vr_booking.exception.InvalidInputException;
+import com.bencomester.vr_booking.exception.ResourceConflictException;
+import com.bencomester.vr_booking.exception.ResourceNotFoundException;
 import com.bencomester.vr_booking.service.UserService;
 import com.bencomester.vr_booking.service.dto.*;
 import com.bencomester.vr_booking.service.mapper.ReservationMapper;
@@ -27,6 +30,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private static final String USER_NOT_FOUND_MSG = "User not found.";
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final ReservationRepository reservationRepository;
@@ -40,15 +45,18 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public AuthResponseDto register(RegisterRequestDto registerRequestDto) {
-        if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
-            throw new IllegalArgumentException("This email address is already in use");
+        String normalizedEmail = registerRequestDto.getEmail().trim().toLowerCase(Locale.ROOT);
+        log.info("Registration attempt for email='{}'", normalizedEmail);
+
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new ResourceConflictException("This email address is already in use.");
         }
         RoleEntity userRole = roleRepository.findByName(UserRole.USER)
                 .orElseGet(() -> roleRepository.save(new RoleEntity(null, UserRole.USER)));
 
         UserEntity user = new UserEntity();
-        user.setFullName(registerRequestDto.getFullName());
-        user.setEmail(registerRequestDto.getEmail());
+        user.setFullName(registerRequestDto.getFullName().trim());
+        user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(registerRequestDto.getPassword()));
         user.setPhoneNumber(registerRequestDto.getPhoneNumber());
         user.setCreatedAt(LocalDateTime.now());
@@ -63,12 +71,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
+        String normalizedEmail = loginRequestDto.getEmail().trim().toLowerCase(Locale.ROOT);
+
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword())
+                new UsernamePasswordAuthenticationToken(normalizedEmail, loginRequestDto.getPassword())
         );
 
-        UserEntity user = userRepository.findByEmail(loginRequestDto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        UserEntity user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequestDto.getEmail());
         String token = jwtService.generateToken(userDetails);
@@ -80,7 +90,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserDto getAccountDetails(String email) {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG));
         return userMapper.toDto(user);
     }
 
@@ -88,18 +98,19 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto updateAccountDetails(String email, UserUpdateDto userUpdateDto) {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
         user.setFullName(userUpdateDto.getFullName());
         user.setPhoneNumber(userUpdateDto.getPhoneNumber());
         user.setProfilePictureUrl(userUpdateDto.getProfilePictureUrl());
-        return userMapper.toDto(userRepository.save(user));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG));
+        UserEntity saved = userRepository.save(user);
+        return userMapper.toDto(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReservationDto> getUserReservations(String email) {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG));
         return reservationMapper.toDto(reservationRepository.findAllByUser_id(user.getId()));
     }
 }
