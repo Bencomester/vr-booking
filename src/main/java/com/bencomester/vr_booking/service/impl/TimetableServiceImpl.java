@@ -12,6 +12,7 @@ import com.bencomester.vr_booking.data.entity.ReservationEntity;
 import com.bencomester.vr_booking.data.repository.AvailabilityRepository;
 import com.bencomester.vr_booking.data.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TimetableServiceImpl implements TimetableService {
@@ -35,16 +37,18 @@ public class TimetableServiceImpl implements TimetableService {
     public TimetableResponseDto getAvailableTimetable() {
         List<AvailabilityEntity> rawAvailabilities = availabilityRepository.findAll();
         if (rawAvailabilities.isEmpty()) {
+            log.debug("No availability windows found; returning empty timetable");
             return new TimetableResponseDto(List.of());
         }
 
         rawAvailabilities.sort(Comparator.comparing(AvailabilityEntity::getStartTime));
         List<TimeBlock> availabilities = mergeRawAvailabilities(rawAvailabilities);
-
         availabilities = splitBlocksByDay(availabilities);
         availabilities = subtractReservationsFromMerged(availabilities);
 
-        return new TimetableResponseDto(filterOutPastBlocks(availabilities));
+        List<TimeBlock> futureBlocks = filterOutPastBlocks(availabilities);
+        log.debug("Computed timetable with {} available time blocks", futureBlocks.size());
+        return new TimetableResponseDto(futureBlocks);
     }
 
     private List<TimeBlock> splitBlocksByDay(List<TimeBlock> blocks) {

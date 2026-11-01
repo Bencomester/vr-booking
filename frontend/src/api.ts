@@ -1,3 +1,5 @@
+import { logger } from './utils/logger';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/vr/api';
 export const TOKEN_STORAGE_KEY = 'token';
 
@@ -21,6 +23,8 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    logger.debug('API', `Requesting ${method} ${endpoint}`);
+
     const response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
         headers,
@@ -28,19 +32,25 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
 
     if (!response.ok) {
         let errorMessage = `HTTP Error ${response.status} on ${endpoint}`;
+        let errorCode = `HTTP_${response.status}`;
         try {
             const errJson = (await response.json()) as WrappedResponse<T>;
             if (errJson?.error?.message) {
                 errorMessage = errJson.error.message;
             }
+            if (errJson?.error?.code) {
+                errorCode = errJson.error.code;
+            }
         } catch {
             errorMessage = `HTTP Error ${response.status} on ${endpoint}`;
         }
+        logger.warn('API', `Failed ${method} ${endpoint} [${errorCode}]: ${errorMessage}`);
         throw new Error(errorMessage);
     }
 
     const text = await response.text();
     if (!text) {
+        logger.debug('API', `Completed ${method} ${endpoint} (empty body)`);
         return undefined as T;
     }
 
@@ -49,8 +59,11 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     if (json && typeof json === 'object' && 'success' in json && 'data' in json) {
         const wrapped = json as WrappedResponse<T>;
         if (!wrapped.success) {
-            throw new Error(wrapped.error?.message || 'Unknown backend error');
+            const msg = wrapped.error?.message || 'Unknown backend error';
+            logger.warn('API', `Backend error on ${method} ${endpoint}: ${msg}`);
+            throw new Error(msg);
         }
+        logger.debug('API', `Succeeded ${method} ${endpoint}`);
         return wrapped.data as T;
     }
 

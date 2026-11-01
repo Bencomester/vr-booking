@@ -5,6 +5,7 @@ import com.bencomester.vr_booking.data.enums.HeadsetStatus;
 import com.bencomester.vr_booking.data.enums.UserRole;
 import com.bencomester.vr_booking.data.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class Initializer implements CommandLineRunner {
@@ -45,6 +47,7 @@ public class Initializer implements CommandLineRunner {
     public void run(String... args) {
         roleRepository.findByName(UserRole.USER)
                 .orElseGet(() -> roleRepository.save(new RoleEntity(null, UserRole.USER)));
+        log.info("Database initialization check completed (seedEnabled=true)");
 
         RoleEntity adminRole = roleRepository.findByName(UserRole.ADMIN)
                 .orElseGet(() -> roleRepository.save(new RoleEntity(null, UserRole.ADMIN)));
@@ -62,6 +65,7 @@ public class Initializer implements CommandLineRunner {
             );
             userRepository.save(admin);
         }
+    }
 
         if (!seedEnabled) return;
 

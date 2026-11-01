@@ -22,6 +22,7 @@ import {
     getGameCoverUrl,
     toIsoDateString,
 } from '../utils/formatters';
+import { logger } from '../utils/logger';
 
 interface AdminStudioPageProps {
     route: PageRoute;
@@ -98,12 +99,14 @@ export function AdminStudioPage({
                 endTime: `${availForm.endDate}T${availForm.endTime}:00`,
             };
             if (availForm.id !== undefined) {
+                logger.info('ADMIN', `Updating availability window #${availForm.id}`, payload);
                 await apiFetch<AvailabilityDto>(`/availability/${availForm.id}`, {
                     method: 'PUT',
                     body: JSON.stringify(payload),
                 });
                 onShowSuccess(`Availability window #${availForm.id} updated!`);
             } else {
+                logger.info('ADMIN', 'Creating new availability window', payload);
                 await apiFetch<AvailabilityDto>('/availability', {
                     method: 'POST',
                     body: JSON.stringify(payload),
@@ -138,10 +141,11 @@ export function AdminStudioPage({
                             startTime: `${day.iso}T10:00:00`,
                             endTime: `${day.iso}T22:00:00`,
                         }),
-                    });
-                    createdCount++;
-                }
-            }
+                    })
+                )
+            );
+            const createdCount = missingDays.length;
+            logger.info('ADMIN', `Auto-filled ${createdCount} missing availability days`);
             onShowSuccess(
                 createdCount > 0
                     ? `Generated 10:00–22:00 availability for ${createdCount} missing day(s) of the week!`
@@ -155,6 +159,7 @@ export function AdminStudioPage({
 
     const handleDeleteAvailability = async (id: number) => {
         try {
+            logger.info('ADMIN', `Deleting availability window #${id}`);
             await apiFetch<void>(`/availability/${id}`, { method: 'DELETE' });
             onShowSuccess('Availability window deleted.');
             await onRefreshAll();
@@ -171,6 +176,7 @@ export function AdminStudioPage({
         }
         setFetchingSteamForm(true);
         try {
+            logger.info('STEAM', `Pulling Steam Store metadata for appId=${appId}`);
             const details = await apiFetch<SteamGameDetailsDto>(
                 `/game/steam/${encodeURIComponent(appId)}`
             );
@@ -193,12 +199,14 @@ export function AdminStudioPage({
         e.preventDefault();
         try {
             if (gameForm.id !== undefined) {
+                logger.info('ADMIN', `Updating game #${gameForm.id}`, gameForm);
                 await apiFetch<GameDto>(`/game/${gameForm.id}`, {
                     method: 'PUT',
                     body: JSON.stringify(gameForm),
                 });
                 onShowSuccess(`Game "${gameForm.title}" updated!`);
             } else {
+                logger.info('ADMIN', `Creating game "${gameForm.title}"`, gameForm);
                 await apiFetch<GameDto>('/game', {
                     method: 'POST',
                     body: JSON.stringify(gameForm),
@@ -214,6 +222,7 @@ export function AdminStudioPage({
 
     const handleDeleteGame = async (id: number) => {
         try {
+            logger.info('ADMIN', `Deleting game #${id}`);
             await apiFetch<void>(`/game/${id}`, { method: 'DELETE' });
             onShowSuccess('Game deleted.');
             await onRefreshAll();
@@ -238,12 +247,14 @@ export function AdminStudioPage({
                 installedGames: selectedGames,
             };
             if (headsetForm.id !== undefined) {
+                logger.info('ADMIN', `Updating headset #${headsetForm.id}`, dto);
                 await apiFetch<HeadsetDto>(`/headset/${headsetForm.id}`, {
                     method: 'PUT',
                     body: JSON.stringify(dto),
                 });
                 onShowSuccess(`Headset "${headsetForm.name}" updated!`);
             } else {
+                logger.info('ADMIN', `Creating headset "${headsetForm.name}"`, dto);
                 await apiFetch<HeadsetDto>('/headset', {
                     method: 'POST',
                     body: JSON.stringify(dto),
@@ -267,6 +278,7 @@ export function AdminStudioPage({
 
     const handleDeleteHeadset = async (id: number) => {
         try {
+            logger.info('ADMIN', `Deleting headset #${id}`);
             await apiFetch<void>(`/headset/${id}`, { method: 'DELETE' });
             onShowSuccess('Headset deleted.');
             await onRefreshAll();
@@ -279,12 +291,14 @@ export function AdminStudioPage({
         e.preventDefault();
         try {
             if (rigForm.id !== undefined) {
+                logger.info('ADMIN', `Updating PC rig #${rigForm.id}`, rigForm);
                 await apiFetch<RigDto>(`/rig/${rigForm.id}`, {
                     method: 'PUT',
                     body: JSON.stringify(rigForm),
                 });
                 onShowSuccess(`Rig "${rigForm.name}" updated!`);
             } else {
+                logger.info('ADMIN', `Creating PC rig "${rigForm.name}"`, rigForm);
                 await apiFetch<RigDto>('/rig', {
                     method: 'POST',
                     body: JSON.stringify(rigForm),
@@ -309,6 +323,7 @@ export function AdminStudioPage({
 
     const handleDeleteRig = async (id: number) => {
         try {
+            logger.info('ADMIN', `Deleting PC rig #${id}`);
             await apiFetch<void>(`/rig/${id}`, { method: 'DELETE' });
             onShowSuccess('Rig deleted.');
             await onRefreshAll();
@@ -319,6 +334,7 @@ export function AdminStudioPage({
 
     const handleUpdateReservationStatus = async (id: number, status: ReservationStatus) => {
         try {
+            logger.info('ADMIN', `Changing reservation #${id} status to ${status}`);
             await apiFetch<ReservationDto>(
                 `/reservation/${id}/status?status=${encodeURIComponent(status)}`,
                 { method: 'PUT' }
@@ -332,6 +348,7 @@ export function AdminStudioPage({
 
     const handleDeleteReservation = async (id: number) => {
         try {
+            logger.info('ADMIN', `Permanently deleting reservation #${id}`);
             await apiFetch<void>(`/reservation/${id}`, { method: 'DELETE' });
             onShowSuccess(`Reservation #${id} permanently deleted.`);
             await onRefreshAll();

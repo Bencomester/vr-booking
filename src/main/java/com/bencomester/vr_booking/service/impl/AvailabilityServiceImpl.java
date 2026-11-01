@@ -8,11 +8,13 @@ import com.bencomester.vr_booking.service.AvailabilityService;
 import com.bencomester.vr_booking.service.dto.AvailabilityDto;
 import com.bencomester.vr_booking.service.mapper.AvailabilityMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AvailabilityServiceImpl implements AvailabilityService {
@@ -23,12 +25,15 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     @Override
     @Transactional(readOnly = true)
     public List<AvailabilityDto> findAll() {
-        return availabilityMapper.toDto(availabilityRepository.findAll());
+        List<AvailabilityDto> list = availabilityMapper.toDto(availabilityRepository.findAll());
+        log.debug("Fetched {} availability windows", list.size());
+        return list;
     }
 
     @Override
     @Transactional(readOnly = true)
     public AvailabilityDto findById(Long id) {
+        log.debug("Looking up availability window id={}", id);
         return availabilityRepository.findById(id)
                 .map(availabilityMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("No available time window found with id: " + id));
@@ -40,7 +45,9 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         validateTimes(availabilityDto);
         AvailabilityEntity avail = availabilityMapper.toEntity(availabilityDto);
         avail.setId(null);
-        return availabilityMapper.toDto(availabilityRepository.save(avail));
+        AvailabilityEntity saved = availabilityRepository.save(avail);
+        log.info("Created availability window id={} ({} -> {})", saved.getId(), saved.getStartTime(), saved.getEndTime());
+        return availabilityMapper.toDto(saved);
     }
 
     @Override
@@ -51,7 +58,9 @@ public class AvailabilityServiceImpl implements AvailabilityService {
                 .orElseThrow(() -> new ResourceNotFoundException("No available time window found with id: " + id));
         existing.setStartTime(availabilityDto.getStartTime());
         existing.setEndTime(availabilityDto.getEndTime());
-        return availabilityMapper.toDto(availabilityRepository.save(existing));
+        AvailabilityEntity saved = availabilityRepository.save(existing);
+        log.info("Updated availability window id={} ({} -> {})", saved.getId(), saved.getStartTime(), saved.getEndTime());
+        return availabilityMapper.toDto(saved);
     }
 
     @Override
@@ -61,6 +70,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             throw new ResourceNotFoundException("No available time window found with id: " + id);
         }
         availabilityRepository.deleteById(id);
+        log.info("Deleted availability window id={}", id);
     }
 
     private void validateTimes(AvailabilityDto dto) {

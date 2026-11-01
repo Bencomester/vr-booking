@@ -7,11 +7,13 @@ import com.bencomester.vr_booking.service.RigService;
 import com.bencomester.vr_booking.service.dto.RigDto;
 import com.bencomester.vr_booking.service.mapper.RigMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RigServiceImpl implements RigService {
@@ -22,12 +24,15 @@ public class RigServiceImpl implements RigService {
     @Override
     @Transactional(readOnly = true)
     public List<RigDto> findAll() {
-        return rigMapper.toDto(rigRepository.findAll());
+        List<RigDto> rigs = rigMapper.toDto(rigRepository.findAll());
+        log.debug("Fetched {} PC rigs", rigs.size());
+        return rigs;
     }
 
     @Override
     @Transactional(readOnly = true)
     public RigDto findById(Long id) {
+        log.debug("Looking up PC rig id={}", id);
         return rigRepository.findById(id)
                 .map(rigMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("No Rig found with id: " + id));
@@ -38,7 +43,9 @@ public class RigServiceImpl implements RigService {
     public RigDto save(RigDto rigDto) {
         RigEntity rigEntity = rigMapper.toEntity(rigDto);
         rigEntity.setId(null);
-        return rigMapper.toDto(rigRepository.save(rigEntity));
+        RigEntity saved = rigRepository.save(rigEntity);
+        log.info("Created PC rig id={} name='{}'", saved.getId(), saved.getName());
+        return rigMapper.toDto(saved);
     }
 
     @Override
@@ -53,7 +60,9 @@ public class RigServiceImpl implements RigService {
         existing.setOs(rigDto.getOs());
         existing.setImageUrl(rigDto.getImageUrl());
         existing.setDescription(rigDto.getDescription());
-        return rigMapper.toDto(rigRepository.save(existing));
+        RigEntity saved = rigRepository.save(existing);
+        log.info("Updated PC rig id={} name='{}'", saved.getId(), saved.getName());
+        return rigMapper.toDto(saved);
     }
 
     @Override
@@ -63,5 +72,6 @@ public class RigServiceImpl implements RigService {
             throw new ResourceNotFoundException("No Rig found with id: " + id);
         }
         rigRepository.deleteById(id);
+        log.info("Deleted PC rig id={}", id);
     }
 }

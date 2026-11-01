@@ -10,11 +10,13 @@ import com.bencomester.vr_booking.service.dto.HeadsetDto;
 import com.bencomester.vr_booking.service.mapper.GameMapper;
 import com.bencomester.vr_booking.service.mapper.HeadsetMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HeadsetServiceImpl implements HeadsetService {
@@ -27,12 +29,15 @@ public class HeadsetServiceImpl implements HeadsetService {
     @Override
     @Transactional(readOnly = true)
     public List<HeadsetDto> findAll() {
-        return headsetMapper.toDto(headsetRepository.findAll());
+        List<HeadsetDto> headsets = headsetMapper.toDto(headsetRepository.findAll());
+        log.debug("Fetched {} headsets", headsets.size());
+        return headsets;
     }
 
     @Override
     @Transactional(readOnly = true)
     public HeadsetDto findById(Long id) {
+        log.debug("Looking up headset id={}", id);
         return headsetRepository.findById(id)
                 .map(headsetMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("No Headset found with id: " + id));
@@ -43,7 +48,10 @@ public class HeadsetServiceImpl implements HeadsetService {
     public HeadsetDto save(HeadsetDto headsetDto) {
         HeadsetEntity headsetEntity = headsetMapper.toEntity(headsetDto);
         headsetEntity.setId(null);
-        return headsetMapper.toDto(headsetRepository.save(headsetEntity));
+        HeadsetEntity saved = headsetRepository.save(headsetEntity);
+        log.info("Created headset id={} name='{}' status={} price={}",
+                saved.getId(), saved.getName(), saved.getStatus(), saved.getHourlyPrice());
+        return headsetMapper.toDto(saved);
     }
 
     @Override
@@ -57,7 +65,9 @@ public class HeadsetServiceImpl implements HeadsetService {
         existing.setDescription(headsetDto.getDescription());
         existing.setImageUrl(headsetDto.getImageUrl());
         existing.setInstalledGames(gameMapper.toEntity(headsetDto.getInstalledGames()));
-        return headsetMapper.toDto(headsetRepository.save(existing));
+        HeadsetEntity saved = headsetRepository.save(existing);
+        log.info("Updated headset id={} name='{}' status={}", saved.getId(), saved.getName(), saved.getStatus());
+        return headsetMapper.toDto(saved);
     }
 
     @Override
@@ -67,7 +77,11 @@ public class HeadsetServiceImpl implements HeadsetService {
             throw new ResourceNotFoundException("No Headset found with id: " + id);
         }
         List<ReservationEntity> reservations = reservationRepository.findAllByHeadset_id(id);
-        reservationRepository.deleteAll(reservations);
+        if (!reservations.isEmpty()) {
+            reservationRepository.deleteAll(reservations);
+            log.info("Deleted {} associated reservations for headset id={}", reservations.size(), id);
+        }
         headsetRepository.deleteById(id);
+        log.info("Deleted headset id={}", id);
     }
 }

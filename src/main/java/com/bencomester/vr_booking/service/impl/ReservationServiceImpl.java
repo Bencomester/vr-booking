@@ -19,14 +19,16 @@ import com.bencomester.vr_booking.service.dto.ReservationCreateDto;
 import com.bencomester.vr_booking.service.dto.ReservationDto;
 import com.bencomester.vr_booking.service.mapper.ReservationMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
@@ -60,8 +62,10 @@ public class ReservationServiceImpl implements ReservationService {
                 start,
                 end,
                 ReservationStatus.CONFIRMED);
-
-        return reservationMapper.toDto(reservationRepository.save(reservation));
+        ReservationEntity saved = reservationRepository.save(reservation);
+        log.info("Confirmed reservation id={} for user='{}' headset='{}' ({} -> {})",
+                saved.getId(), userEmail, headsetEntity.getName(), start, end);
+        return reservationMapper.toDto(saved);
     }
 
     private void validateReservationWindow(LocalDateTime start, LocalDateTime end) {
@@ -113,11 +117,11 @@ public class ReservationServiceImpl implements ReservationService {
         if (!isOwner && !isAdmin(caller)) {
             throw new ForbiddenOperationException("You can only cancel your own reservations.");
         }
-        return updateStatus(reservation, ReservationStatus.CANCELLED);
         if (reservation.getStatus() == ReservationStatus.COMPLETED) {
             throw new ResourceConflictException("Completed reservations cannot be cancelled.");
         }
 
+        log.info("Reservation id={} cancelled by '{}'", reservationId, userEmail);
         return saveStatus(reservation, ReservationStatus.CANCELLED);
     }
 
@@ -128,7 +132,9 @@ public class ReservationServiceImpl implements ReservationService {
         if (!isAdmin(caller)) {
             throw new ForbiddenOperationException("Only administrators can view all reservations.");
         }
-        return reservationMapper.toDto(reservationRepository.findAll());
+        List<ReservationDto> all = reservationMapper.toDto(reservationRepository.findAll());
+        log.debug("Admin '{}' fetched {} total reservations", userEmail, all.size());
+        return all;
     }
 
     @Override
@@ -136,6 +142,7 @@ public class ReservationServiceImpl implements ReservationService {
     public List<ReservationDto> findAllByUser(String userEmail) {
         Long userId = getCallerOrThrow(userEmail).getId();
         List<ReservationDto> list = reservationMapper.toDto(reservationRepository.findAllByUser_id(userId));
+        log.debug("User '{}' fetched {} personal reservations", userEmail, list.size());
         return list;
     }
 
@@ -159,7 +166,8 @@ public class ReservationServiceImpl implements ReservationService {
             testHeadsetAvailability(reservation.getStartTime(), reservation.getEndTime(), reservation.getHeadset().getId());
         }
 
-    private ReservationDto updateStatus(ReservationEntity reservation, ReservationStatus status) {
+        log.info("Admin '{}' updated reservation id={} status from {} to {}",
+                userEmail, id, reservation.getStatus(), status);
         return saveStatus(reservation, status);
     }
 
@@ -194,5 +202,6 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         reservationRepository.deleteById(id);
+        log.info("Permanently deleted reservation id={}", id);
     }
 }

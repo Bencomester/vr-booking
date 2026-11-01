@@ -25,6 +25,7 @@ import {
     type UserUpdateDto,
 } from './types';
 import { buildWeekDays, parsePathToRoute } from './utils/formatters';
+import { logger } from './utils/logger';
 
 export function App() {
     const [route, setRoute] = useState<PageRoute>(() => parsePathToRoute(window.location.pathname));
@@ -57,6 +58,7 @@ export function App() {
         if (window.location.pathname !== targetPath) {
             window.history.pushState({ route: nextRoute }, '', targetPath);
         }
+        logger.debug('NAVIGATION', `Navigated to ${nextRoute} (${targetPath})`);
         setRoute(nextRoute);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -114,9 +116,10 @@ export function App() {
             ]);
             setUser(account);
             setMyReservations(myRes || []);
+            logger.info('AUTH', `Loaded session for ${account.email} (${account.role})`);
         } catch (err) {
-            console.error('loadAccountData failed:', err);
-            localStorage.removeItem('token');
+            logger.warn('AUTH', 'Session token expired or invalid; clearing token', err);
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
             setUser(null);
             setMyReservations([]);
         }
@@ -181,6 +184,7 @@ export function App() {
         try {
             setErrorMsg(null);
             const endpoint = isRegistering ? '/auth/register' : '/auth/login';
+            logger.info('AUTH', `Submitting ${endpoint} for ${payload.email}`);
             const res = await apiFetch<AuthResponseDto>(endpoint, {
                 method: 'POST',
                 body: JSON.stringify(payload),
@@ -196,6 +200,7 @@ export function App() {
 
     const handleUpdateProfile = async (dto: UserUpdateDto) => {
         try {
+            logger.info('AUTH', 'Updating user profile', dto);
             const updated = await apiFetch<UserDto>('/account', {
                 method: 'PUT',
                 body: JSON.stringify(dto),
@@ -208,6 +213,7 @@ export function App() {
     };
 
     const handleLogout = () => {
+        logger.info('AUTH', `Logging out user ${user?.email || ''}`);
         localStorage.removeItem(TOKEN_STORAGE_KEY);
         setUser(null);
         setMyReservations([]);
@@ -226,6 +232,8 @@ export function App() {
             return;
         }
         try {
+            const payload: ReservationCreateDto = { headsetId, startTime, endTime };
+            logger.info('BOOKING', 'Creating reservation', payload);
             await apiFetch<ReservationDto>('/reservation', {
                 method: 'POST',
                 body: JSON.stringify({ headsetId, startTime, endTime }),
@@ -239,6 +247,7 @@ export function App() {
 
     const handleCancelReservation = async (id: number) => {
         try {
+            logger.info('BOOKING', `Cancelling reservation #${id}`);
             await apiFetch<ReservationDto>(`/reservation/${id}/cancel`, { method: 'POST' });
             showSuccess('Reservation cancelled.');
             await refreshAll();

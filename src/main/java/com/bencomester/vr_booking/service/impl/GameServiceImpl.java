@@ -14,6 +14,7 @@ import com.bencomester.vr_booking.service.mapper.GameMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
@@ -40,12 +42,15 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional(readOnly = true)
     public List<GameDto> findAll() {
-        return gameMapper.toDto(gameRepository.findAll());
+        List<GameDto> games = gameMapper.toDto(gameRepository.findAll());
+        log.debug("Fetched {} games from catalog", games.size());
+        return games;
     }
 
     @Override
     @Transactional(readOnly = true)
     public GameDto findById(Long id) {
+        log.debug("Looking up game id={}", id);
         return gameRepository.findById(id)
                 .map(gameMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("No Game found with id: " + id));
@@ -57,7 +62,9 @@ public class GameServiceImpl implements GameService {
         applySteamDefaultImage(gameDto);
         GameEntity gameEntity = gameMapper.toEntity(gameDto);
         gameEntity.setId(null);
-        return gameMapper.toDto(gameRepository.save(gameEntity));
+        GameEntity saved = gameRepository.save(gameEntity);
+        log.info("Created game id={} title='{}' steamAppId={}", saved.getId(), saved.getTitle(), saved.getSteamAppId());
+        return gameMapper.toDto(saved);
     }
 
     @Override
@@ -70,7 +77,9 @@ public class GameServiceImpl implements GameService {
         existing.setDescription(gameDto.getDescription());
         existing.setSteamAppId(gameDto.getSteamAppId());
         existing.setImageUrl(gameDto.getImageUrl());
-        return gameMapper.toDto(gameRepository.save(existing));
+        GameEntity saved = gameRepository.save(existing);
+        log.info("Updated game id={} title='{}'", saved.getId(), saved.getTitle());
+        return gameMapper.toDto(saved);
     }
 
     @Override
@@ -83,9 +92,11 @@ public class GameServiceImpl implements GameService {
         for (HeadsetEntity headset : headsets) {
             if (headset.getInstalledGames().removeIf(g -> g.getId().equals(id))) {
                 headsetRepository.save(headset);
+                log.info("Removed game id={} from headset id={}", id, headset.getId());
             }
         }
         gameRepository.deleteById(id);
+        log.info("Deleted game id={}", id);
     }
 
     @Override
@@ -96,6 +107,7 @@ public class GameServiceImpl implements GameService {
             throw new InvalidInputException("Invalid numeric Steam App ID: " + id);
         }
         int numericAppId = Integer.parseInt(id);
+        log.info("Fetching live Steam Store telemetry for appId={}", numericAppId);
         try {
             String url = "https://store.steampowered.com/api/appdetails?appids=" + id + "&l=english";
             HttpRequest request = HttpRequest.newBuilder()
@@ -131,6 +143,7 @@ public class GameServiceImpl implements GameService {
                     : null;
 
             String fetchedName = data.path("name").asText("");
+            log.info("Successfully fetched Steam telemetry for appId={} ('{}')", numericAppId, fetchedName);
 
             return new SteamGameDetailsDto(
                     numericAppId,

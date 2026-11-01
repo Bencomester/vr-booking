@@ -17,6 +17,7 @@ import com.bencomester.vr_booking.service.dto.*;
 import com.bencomester.vr_booking.service.mapper.ReservationMapper;
 import com.bencomester.vr_booking.service.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -52,6 +54,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new ResourceConflictException("This email address is already in use.");
         }
+
         RoleEntity userRole = roleRepository.findByName(UserRole.USER)
                 .orElseGet(() -> roleRepository.save(new RoleEntity(null, UserRole.USER)));
 
@@ -63,7 +66,10 @@ public class UserServiceImpl implements UserService {
         user.setPhoneNumber(registerRequestDto.getPhoneNumber() != null ? registerRequestDto.getPhoneNumber().trim() : null);
         user.setProfilePictureUrl(AllowedAvatars.DEFAULT_AVATAR);
         user.setRole(userRole);
+
         user = userRepository.save(user);
+        log.info("Registered new user id={} email='{}'", user.getId(), user.getEmail());
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);
 
@@ -74,6 +80,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
         String normalizedEmail = loginRequestDto.getEmail().trim().toLowerCase(Locale.ROOT);
+        log.info("Login attempt for email='{}'", normalizedEmail);
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(normalizedEmail, loginRequestDto.getPassword())
@@ -84,6 +91,7 @@ public class UserServiceImpl implements UserService {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedEmail);
         String token = jwtService.generateToken(userDetails);
+        log.info("User '{}' logged in successfully with role={}", normalizedEmail, user.getRole().getName());
 
         return new AuthResponseDto(token, userMapper.toDto(user));
     }
@@ -91,6 +99,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDto getAccountDetails(String email) {
+        log.debug("Fetching account details for '{}'", email);
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG));
         return userMapper.toDto(user);
@@ -114,6 +123,7 @@ public class UserServiceImpl implements UserService {
         user.setFullName(userUpdateDto.getFullName().trim());
         user.setPhoneNumber(userUpdateDto.getPhoneNumber() != null ? userUpdateDto.getPhoneNumber().trim() : null);
         UserEntity saved = userRepository.save(user);
+        log.info("Updated profile for user '{}'", email);
         return userMapper.toDto(saved);
     }
 
