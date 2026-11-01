@@ -20,7 +20,7 @@ export function HomePage({
                              onNavigate,
                              onSelectHeadsetForBooking,
                              onOpenGameDetails,
-                         }: HomePageProps) {
+                         }: Readonly<HomePageProps>) {
     const t = translations[lang].home;
 
     return (

@@ -32,7 +32,7 @@ export function TimetablePage({
                                   weekDays,
                                   lang,
                                   onBookReservation,
-                              }: TimetablePageProps) {
+                              }: Readonly<TimetablePageProps>) {
     const [selectedDate, setSelectedDate] = useState<string>(() => toIsoDateString(new Date()));
     const [bookingStartTime, setBookingStartTime] = useState<string>('14:00');
     const [bookingEndTime, setBookingEndTime] = useState<string>('15:00');
@@ -45,7 +45,7 @@ export function TimetablePage({
 
     const bookingDurationMinutes = useMemo(() => {
         const diff = clockToMinutes(bookingEndTime) - clockToMinutes(bookingStartTime);
-        return diff > 0 ? diff : 0;
+        return Math.max(diff, 0);
     }, [bookingStartTime, bookingEndTime]);
 
     const estimatedPriceHuf = useMemo(() => {

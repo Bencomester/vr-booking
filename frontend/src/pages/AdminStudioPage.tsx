@@ -60,7 +60,7 @@ export function AdminStudioPage({
                                     onCancelReservation,
                                     onShowSuccess,
                                     onShowError,
-                                }: AdminStudioPageProps) {
+                                }: Readonly<AdminStudioPageProps>) {
     const t = translations[lang].admin;
 
     const [availForm, setAvailForm] = useState<{

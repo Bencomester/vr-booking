@@ -25,7 +25,13 @@ export const AVATAR_PRESETS = [
 ];
 
 export function parsePathToRoute(pathname: string): PageRoute {
-    const clean = pathname.replace(/\/+$/, '') || '/';
+    let clean = pathname;
+    while (clean.length > 1 && clean.endsWith('/')) {
+        clean = clean.slice(0, -1);
+    }
+    if (!clean) {
+        clean = '/';
+    }
     const entry = (Object.entries(ROUTE_PATHS) as [PageRoute, string][]).find(
         ([, path]) => path === clean
     );

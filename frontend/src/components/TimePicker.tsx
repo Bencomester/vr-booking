@@ -5,13 +5,13 @@ interface Time24PickerProps {
     onChange: (nextValue: string) => void;
 }
 
-export function Time24Picker({ value, onChange }: Time24PickerProps) {
+export function Time24Picker({ value, onChange }: Readonly<Time24PickerProps>) {
     const parts = value.split(':');
     const currentHour = parts[0] && HOURS_24.includes(parts[0]) ? parts[0] : '14';
     const currentMinute = parts[1] ? parts[1].slice(0, 2) : '00';
     const minuteOptions = MINUTES_STEP.includes(currentMinute)
         ? MINUTES_STEP
-        : [...MINUTES_STEP, currentMinute].sort();
+        : [...MINUTES_STEP, currentMinute].sort((a, b) => a.localeCompare(b));
 
     return (
         <div className="time24-picker">

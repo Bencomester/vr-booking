@@ -29,7 +29,7 @@ export function AccountPage({
                                 onUpdateProfile,
                                 onCancelReservation,
                                 onLogout,
-                            }: AccountPageProps) {
+                            }: Readonly<AccountPageProps>) {
     const [isRegistering, setIsRegistering] = useState<boolean>(false);
     const [authEmail, setAuthEmail] = useState<string>('');
     const [authPassword, setAuthPassword] = useState<string>('');
