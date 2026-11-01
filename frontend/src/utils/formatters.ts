@@ -1,3 +1,4 @@
+import { DAY_NAMES, type Language } from '../i18n';
 import { type GameDto, type PageRoute, ROUTE_PATHS, type WeekDayInfo } from '../types';
 
 export const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -49,9 +50,9 @@ export function toIsoDateString(d: Date): string {
     return `${year}-${month}-${day}`;
 }
 
-export function buildWeekDays(weekOffset: number): WeekDayInfo[] {
+export function buildWeekDays(weekOffset: number, lang: Language = 'en'): WeekDayInfo[] {
     const monday = getMondayOfWeek(new Date(), weekOffset);
-    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const dayNames = DAY_NAMES[lang];
     const todayIso = toIsoDateString(new Date());
 
     return Array.from({ length: 7 }, (_, idx) => {

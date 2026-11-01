@@ -1,12 +1,18 @@
 import { type SyntheticEvent, useState } from 'react';
 import { apiFetch } from '../api';
 import { Time24Picker } from '../components/TimePicker';
+import {
+    type Language,
+    translateHeadsetStatus,
+    translateReservationStatus,
+    translations,
+} from '../i18n';
 import type {
     AvailabilityDto,
     GameDto,
     HeadsetDto,
-    HeadsetUpdateDto,
     HeadsetStatus,
+    HeadsetUpdateDto,
     PageRoute,
     ReservationDto,
     ReservationStatus,
@@ -26,6 +32,7 @@ import { logger } from '../utils/logger';
 
 interface AdminStudioPageProps {
     route: PageRoute;
+    lang: Language;
     onNavigate: (route: PageRoute) => void;
     games: GameDto[];
     headsets: HeadsetDto[];
@@ -41,6 +48,7 @@ interface AdminStudioPageProps {
 
 export function AdminStudioPage({
                                     route,
+                                    lang,
                                     onNavigate,
                                     games,
                                     headsets,
@@ -53,6 +61,8 @@ export function AdminStudioPage({
                                     onShowSuccess,
                                     onShowError,
                                 }: AdminStudioPageProps) {
+    const t = translations[lang].admin;
+
     const [availForm, setAvailForm] = useState<{
         id?: number;
         startDate: string;
@@ -129,13 +139,12 @@ export function AdminStudioPage({
 
     const handleGenerateCurrentWeekAvailability = async () => {
         try {
-            let createdCount = 0;
-            for (const day of weekDays) {
-                const alreadyExists = adminAvailabilities.some((a) =>
-                    a.startTime.startsWith(day.iso)
-                );
-                if (!alreadyExists) {
-                    await apiFetch<AvailabilityDto>('/availability', {
+            const missingDays = weekDays.filter(
+                (day) => !adminAvailabilities.some((a) => a.startTime.startsWith(day.iso))
+            );
+            await Promise.all(
+                missingDays.map((day) =>
+                    apiFetch<AvailabilityDto>('/availability', {
                         method: 'POST',
                         body: JSON.stringify({
                             startTime: `${day.iso}T10:00:00`,
@@ -361,10 +370,8 @@ export function AdminStudioPage({
         <section className="page-transition">
             <div className="admin-header">
                 <div>
-                    <h1>Admin Control Studio</h1>
-                    <p className="subtitle">
-                        Dedicated management workspaces with full Create, Edit, and Delete capabilities.
-                    </p>
+                    <h1>{t.studioTitle}</h1>
+                    <p className="subtitle">{t.studioSub}</p>
                 </div>
                 <div className="admin-subnav">
                     <button
@@ -372,35 +379,35 @@ export function AdminStudioPage({
                         className={route === 'ADMIN_AVAILABILITY' ? 'subnav-btn active' : 'subnav-btn'}
                         onClick={() => onNavigate('ADMIN_AVAILABILITY')}
                     >
-                        1. Availability (00–24)
+                        {t.tabAvailability}
                     </button>
                     <button
                         type="button"
                         className={route === 'ADMIN_HEADSETS' ? 'subnav-btn active' : 'subnav-btn'}
                         onClick={() => onNavigate('ADMIN_HEADSETS')}
                     >
-                        2. Headsets
+                        {t.tabHeadsets}
                     </button>
                     <button
                         type="button"
                         className={route === 'ADMIN_GAMES' ? 'subnav-btn active' : 'subnav-btn'}
                         onClick={() => onNavigate('ADMIN_GAMES')}
                     >
-                        3. Steam Games
+                        {t.tabGames}
                     </button>
                     <button
                         type="button"
                         className={route === 'ADMIN_RIGS' ? 'subnav-btn active' : 'subnav-btn'}
                         onClick={() => onNavigate('ADMIN_RIGS')}
                     >
-                        4. PC Rigs
+                        {t.tabRigs}
                     </button>
                     <button
                         type="button"
                         className={route === 'ADMIN_RESERVATIONS' ? 'subnav-btn active' : 'subnav-btn'}
                         onClick={() => onNavigate('ADMIN_RESERVATIONS')}
                     >
-                        5. Reservations
+                        {t.tabReservations}
                     </button>
                 </div>
             </div>
@@ -411,21 +418,21 @@ export function AdminStudioPage({
                         <div className="card-header">
                             <h2>
                                 {availForm.id !== undefined
-                                    ? `Edit Availability #${availForm.id}`
-                                    : 'Add Availability Window'}
+                                    ? t.editAvailTitle(availForm.id)
+                                    : t.addAvailTitle}
                             </h2>
                             <button
                                 type="button"
                                 className="secondary-btn small"
                                 onClick={() => void handleGenerateCurrentWeekAvailability()}
                             >
-                                + Auto-Fill Missing Days (10:00–22:00)
+                                {t.autoFillBtn}
                             </button>
                         </div>
                         <form className="vertical-form" onSubmit={handleSaveAvailability}>
                             <div className="form-row">
                                 <label>
-                                    <span>Start Date:</span>
+                                    <span>{t.startDate}</span>
                                     <input
                                         type="date"
                                         value={availForm.startDate}
@@ -434,7 +441,7 @@ export function AdminStudioPage({
                                     />
                                 </label>
                                 <div className="field-group">
-                                    <span>Start Time (24H):</span>
+                                    <span>{t.startTime24}</span>
                                     <Time24Picker
                                         value={availForm.startTime}
                                         onChange={(val) => setAvailForm({ ...availForm, startTime: val })}
@@ -444,7 +451,7 @@ export function AdminStudioPage({
 
                             <div className="form-row">
                                 <label>
-                                    <span>End Date:</span>
+                                    <span>{t.endDate}</span>
                                     <input
                                         type="date"
                                         value={availForm.endDate}
@@ -453,7 +460,7 @@ export function AdminStudioPage({
                                     />
                                 </label>
                                 <div className="field-group">
-                                    <span>End Time (24H):</span>
+                                    <span>{t.endTime24}</span>
                                     <Time24Picker
                                         value={availForm.endTime}
                                         onChange={(val) => setAvailForm({ ...availForm, endTime: val })}
@@ -463,7 +470,7 @@ export function AdminStudioPage({
 
                             <div className="btn-group">
                                 <button type="submit" className="primary-btn">
-                                    {availForm.id !== undefined ? 'Update Window' : 'Create Window'}
+                                    {availForm.id !== undefined ? t.updateWindowBtn : t.createWindowBtn}
                                 </button>
                                 {availForm.id !== undefined && (
                                     <button
@@ -480,7 +487,7 @@ export function AdminStudioPage({
                                             });
                                         }}
                                     >
-                                        Cancel Edit
+                                        {t.cancelEditBtn}
                                     </button>
                                 )}
                             </div>
@@ -488,14 +495,14 @@ export function AdminStudioPage({
                     </div>
 
                     <div className="card">
-                        <h2>Existing Availability Windows ({adminAvailabilities.length})</h2>
+                        <h2>{t.existingAvailTitle(adminAvailabilities.length)}</h2>
                         <ul className="admin-list">
                             {adminAvailabilities.map((a) => (
                                 <li key={a.id}>
-                  <span>
-                    <strong>#{a.id}</strong> | {formatDateTime24(a.startTime)} →{' '}
-                      {formatDateTime24(a.endTime)}
-                  </span>
+                                    <span>
+                                        <strong>#{a.id}</strong> | {formatDateTime24(a.startTime)} →{' '}
+                                        {formatDateTime24(a.endTime)}
+                                    </span>
                                     <div className="btn-group">
                                         <button
                                             type="button"
@@ -510,7 +517,7 @@ export function AdminStudioPage({
                                                 })
                                             }
                                         >
-                                            Edit
+                                            {t.editBtn}
                                         </button>
                                         {a.id !== undefined && (
                                             <button
@@ -518,7 +525,7 @@ export function AdminStudioPage({
                                                 className="danger-btn small"
                                                 onClick={() => void handleDeleteAvailability(a.id!)}
                                             >
-                                                Delete
+                                                {t.deleteBtn}
                                             </button>
                                         )}
                                     </div>
@@ -534,12 +541,12 @@ export function AdminStudioPage({
                     <div className="card">
                         <h2>
                             {headsetForm.id !== undefined
-                                ? `Edit Headset #${headsetForm.id}`
-                                : 'Add New Headset'}
+                                ? t.editHeadsetTitle(headsetForm.id)
+                                : t.addHeadsetTitle}
                         </h2>
                         <form className="vertical-form" onSubmit={handleSaveHeadset}>
                             <label>
-                                <span>Headset Name:</span>
+                                <span>{t.headsetName}</span>
                                 <input
                                     type="text"
                                     placeholder="Valve Index / Meta Quest 3"
@@ -549,11 +556,11 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Hourly Price (HUF):</span>
+                                <span>{t.hourlyPriceHuf}</span>
                                 <input
                                     type="number"
                                     step="100"
-                                    min="0"
+                                    min="1"
                                     value={headsetForm.hourlyPrice}
                                     onChange={(e) =>
                                         setHeadsetForm({
@@ -565,7 +572,7 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Status:</span>
+                                <span>{t.statusLabel}</span>
                                 <select
                                     value={headsetForm.status}
                                     onChange={(e) =>
@@ -575,13 +582,13 @@ export function AdminStudioPage({
                                         })
                                     }
                                 >
-                                    <option value="Available">Available</option>
-                                    <option value="Coming Soon...">Coming Soon...</option>
-                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Available">{translateHeadsetStatus('Available', lang)}</option>
+                                    <option value="Coming Soon...">{translateHeadsetStatus('Coming Soon...', lang)}</option>
+                                    <option value="Maintenance">{translateHeadsetStatus('Maintenance', lang)}</option>
                                 </select>
                             </label>
                             <label>
-                                <span>Picture URL:</span>
+                                <span>{t.pictureUrl}</span>
                                 <input
                                     type="url"
                                     placeholder="https://..."
@@ -592,10 +599,9 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Description:</span>
+                                <span>{t.descriptionLabel}</span>
                                 <textarea
                                     rows={3}
-                                    placeholder="Optics, tracking, controllers, and comfort details..."
                                     value={headsetForm.description}
                                     onChange={(e) =>
                                         setHeadsetForm({ ...headsetForm, description: e.target.value })
@@ -604,7 +610,7 @@ export function AdminStudioPage({
                             </label>
 
                             <div className="checkbox-group">
-                                <span>Installed Games on This Headset:</span>
+                                <span>{t.installedGamesLabel}</span>
                                 <div className="checkbox-grid">
                                     {games.map((g) => (
                                         <label key={g.id} className="checkbox-item">
@@ -627,7 +633,7 @@ export function AdminStudioPage({
 
                             <div className="btn-group">
                                 <button type="submit" className="primary-btn">
-                                    {headsetForm.id !== undefined ? 'Save Changes' : 'Add Headset'}
+                                    {headsetForm.id !== undefined ? t.saveChangesBtn : t.addHeadsetBtn}
                                 </button>
                                 {headsetForm.id !== undefined && (
                                     <button
@@ -645,7 +651,7 @@ export function AdminStudioPage({
                                             })
                                         }
                                     >
-                                        Cancel Edit
+                                        {t.cancelEditBtn}
                                     </button>
                                 )}
                             </div>
@@ -653,7 +659,7 @@ export function AdminStudioPage({
                     </div>
 
                     <div className="card">
-                        <h2>Configured Headsets ({headsets.length})</h2>
+                        <h2>{t.configuredHeadsetsTitle(headsets.length)}</h2>
                         <ul className="admin-list">
                             {headsets.map((h) => (
                                 <li key={h.id}>
@@ -664,9 +670,11 @@ export function AdminStudioPage({
                                             className="admin-thumb"
                                         />
                                         <div>
-                                            <strong>{h.name}</strong> ({h.status}) — {formatHuf(h.hourlyPrice)}/hr
+                                            <strong>{h.name}</strong> ({translateHeadsetStatus(h.status, lang)}) —{' '}
+                                            {formatHuf(h.hourlyPrice)}/{translations[lang].home.hourShort}
                                             <div className="small-text">
-                                                Games: {h.installedGames?.map((g) => g.title).join(', ') || 'None'}
+                                                {t.gamesListPrefix}{' '}
+                                                {h.installedGames?.map((g) => g.title).join(', ') || t.none}
                                             </div>
                                         </div>
                                     </div>
@@ -688,7 +696,7 @@ export function AdminStudioPage({
                                                 })
                                             }
                                         >
-                                            Edit
+                                            {t.editBtn}
                                         </button>
                                         {h.id !== undefined && (
                                             <button
@@ -696,7 +704,7 @@ export function AdminStudioPage({
                                                 className="danger-btn small"
                                                 onClick={() => void handleDeleteHeadset(h.id!)}
                                             >
-                                                Delete
+                                                {t.deleteBtn}
                                             </button>
                                         )}
                                     </div>
@@ -711,11 +719,11 @@ export function AdminStudioPage({
                 <div className="admin-workspace-grid">
                     <div className="card">
                         <h2>
-                            {gameForm.id !== undefined ? `Edit Game #${gameForm.id}` : 'Add Steam VR Game'}
+                            {gameForm.id !== undefined ? t.editGameTitle(gameForm.id) : t.addGameTitle}
                         </h2>
                         <form className="vertical-form" onSubmit={handleSaveGame}>
                             <label>
-                                <span>Steam App ID (Optional — Auto-fills Title, Cover & Description):</span>
+                                <span>{t.steamAppIdLabel}</span>
                                 <div className="steam-fetch-row">
                                     <input
                                         type="number"
@@ -734,12 +742,12 @@ export function AdminStudioPage({
                                         disabled={fetchingSteamForm}
                                         onClick={() => void handleFetchSteamForAdminForm()}
                                     >
-                                        {fetchingSteamForm ? 'Fetching...' : '⚡ Pull from Steam API'}
+                                        {fetchingSteamForm ? t.fetchingSteam : t.pullFromSteamBtn}
                                     </button>
                                 </div>
                             </label>
                             <label>
-                                <span>Game Title:</span>
+                                <span>{t.gameTitleLabel}</span>
                                 <input
                                     type="text"
                                     placeholder="Half-Life: Alyx"
@@ -749,7 +757,7 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Cover Image URL (Auto-filled if Steam App ID is set):</span>
+                                <span>{t.coverImageUrlLabel}</span>
                                 <input
                                     type="url"
                                     placeholder="https://shared.akamai.steamstatic.com/..."
@@ -758,10 +766,9 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Description:</span>
+                                <span>{t.descriptionLabel}</span>
                                 <textarea
                                     rows={4}
-                                    placeholder="Game synopsis and VR features..."
                                     value={gameForm.description}
                                     onChange={(e) =>
                                         setGameForm({ ...gameForm, description: e.target.value })
@@ -771,7 +778,7 @@ export function AdminStudioPage({
 
                             <div className="btn-group">
                                 <button type="submit" className="primary-btn">
-                                    {gameForm.id !== undefined ? 'Update Game' : 'Add Game'}
+                                    {gameForm.id !== undefined ? t.updateGameBtn : t.addGameBtn}
                                 </button>
                                 {gameForm.id !== undefined && (
                                     <button
@@ -787,7 +794,7 @@ export function AdminStudioPage({
                                             })
                                         }
                                     >
-                                        Cancel Edit
+                                        {t.cancelEditBtn}
                                     </button>
                                 )}
                             </div>
@@ -795,7 +802,7 @@ export function AdminStudioPage({
                     </div>
 
                     <div className="card">
-                        <h2>Games Catalog ({games.length})</h2>
+                        <h2>{t.gamesCatalogTitle(games.length)}</h2>
                         <ul className="admin-list">
                             {games.map((g) => (
                                 <li key={g.id}>
@@ -823,7 +830,7 @@ export function AdminStudioPage({
                                                 })
                                             }
                                         >
-                                            Edit
+                                            {t.editBtn}
                                         </button>
                                         {g.id !== undefined && (
                                             <button
@@ -831,7 +838,7 @@ export function AdminStudioPage({
                                                 className="danger-btn small"
                                                 onClick={() => void handleDeleteGame(g.id!)}
                                             >
-                                                Delete
+                                                {t.deleteBtn}
                                             </button>
                                         )}
                                     </div>
@@ -845,10 +852,10 @@ export function AdminStudioPage({
             {route === 'ADMIN_RIGS' && (
                 <div className="admin-workspace-grid">
                     <div className="card">
-                        <h2>{rigForm.id !== undefined ? `Edit Rig #${rigForm.id}` : 'Add PC Rig'}</h2>
+                        <h2>{rigForm.id !== undefined ? t.editRigTitle(rigForm.id) : t.addRigTitle}</h2>
                         <form className="vertical-form" onSubmit={handleSaveRig}>
                             <label>
-                                <span>Rig Name:</span>
+                                <span>{t.rigNameLabel}</span>
                                 <input
                                     type="text"
                                     placeholder="Apex Hyperion X1"
@@ -885,7 +892,7 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Operating System (OS):</span>
+                                <span>{t.osLabel}</span>
                                 <input
                                     type="text"
                                     placeholder="Windows 11 Pro 24H2 / SteamOS"
@@ -894,7 +901,7 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Picture URL:</span>
+                                <span>{t.pictureUrl}</span>
                                 <input
                                     type="url"
                                     placeholder="https://..."
@@ -903,10 +910,9 @@ export function AdminStudioPage({
                                 />
                             </label>
                             <label>
-                                <span>Description:</span>
+                                <span>{t.descriptionLabel}</span>
                                 <textarea
                                     rows={3}
-                                    placeholder="Cooling, tether bandwidth, and chassis details..."
                                     value={rigForm.description}
                                     onChange={(e) => setRigForm({ ...rigForm, description: e.target.value })}
                                 />
@@ -914,7 +920,7 @@ export function AdminStudioPage({
 
                             <div className="btn-group">
                                 <button type="submit" className="primary-btn">
-                                    {rigForm.id !== undefined ? 'Update Rig' : 'Add Rig'}
+                                    {rigForm.id !== undefined ? t.updateRigBtn : t.addRigBtn}
                                 </button>
                                 {rigForm.id !== undefined && (
                                     <button
@@ -933,7 +939,7 @@ export function AdminStudioPage({
                                             })
                                         }
                                     >
-                                        Cancel Edit
+                                        {t.cancelEditBtn}
                                     </button>
                                 )}
                             </div>
@@ -941,7 +947,7 @@ export function AdminStudioPage({
                     </div>
 
                     <div className="card">
-                        <h2>Configured Rigs ({rigs.length})</h2>
+                        <h2>{t.configuredRigsTitle(rigs.length)}</h2>
                         <ul className="admin-list">
                             {rigs.map((r) => (
                                 <li key={r.id}>
@@ -973,7 +979,7 @@ export function AdminStudioPage({
                                                 })
                                             }
                                         >
-                                            Edit
+                                            {t.editBtn}
                                         </button>
                                         {r.id !== undefined && (
                                             <button
@@ -981,7 +987,7 @@ export function AdminStudioPage({
                                                 className="danger-btn small"
                                                 onClick={() => void handleDeleteRig(r.id!)}
                                             >
-                                                Delete
+                                                {t.deleteBtn}
                                             </button>
                                         )}
                                     </div>
@@ -994,49 +1000,52 @@ export function AdminStudioPage({
 
             {route === 'ADMIN_RESERVATIONS' && (
                 <div className="card">
-                    <h2>All Reservations Workflow ({adminReservations.length})</h2>
+                    <h2>{t.allReservationsTitle(adminReservations.length)}</h2>
                     <ul className="admin-list">
                         {adminReservations.map((r) => (
                             <li key={r.id}>
-                <span>
-                  <strong>#{r.id}</strong> | {r.userFullName} | <strong>{r.headsetName}</strong> |{' '}
-                    {formatDateTime24(r.startTime)} → {formatDateTime24(r.endTime)} |{' '}
-                    <span className={`badge badge-${r.status}`}>{r.status}</span>
-                </span>
+                                <span>
+                                    <strong>#{r.id}</strong> | {r.userFullName} |{' '}
+                                    <strong>{r.headsetName}</strong> | {formatDateTime24(r.startTime)} →{' '}
+                                    {formatDateTime24(r.endTime)} |{' '}
+                                    <span className={`badge badge-${r.status}`}>
+                                        {translateReservationStatus(r.status, lang)}
+                                    </span>
+                                </span>
                                 <div className="btn-group">
                                     <button
                                         type="button"
                                         className="secondary-btn small"
                                         onClick={() => void handleUpdateReservationStatus(r.id, 'Confirmed')}
                                     >
-                                        Confirm
+                                        {t.confirmBtn}
                                     </button>
                                     <button
                                         type="button"
                                         className="primary-btn small"
                                         onClick={() => void handleUpdateReservationStatus(r.id, 'Completed')}
                                     >
-                                        Complete
+                                        {t.completeBtn}
                                     </button>
                                     <button
                                         type="button"
                                         className="danger-btn small"
                                         onClick={() => void onCancelReservation(r.id)}
                                     >
-                                        Cancel
+                                        {t.cancelBtn}
                                     </button>
                                     <button
                                         type="button"
                                         className="danger-btn small"
                                         onClick={() => void handleDeleteReservation(r.id)}
                                     >
-                                        Delete
+                                        {t.deleteBtn}
                                     </button>
                                 </div>
                             </li>
                         ))}
                         {adminReservations.length === 0 && (
-                            <p className="muted-text">No reservations recorded yet.</p>
+                            <p className="muted-text">{t.noReservationsRecorded}</p>
                         )}
                     </ul>
                 </div>

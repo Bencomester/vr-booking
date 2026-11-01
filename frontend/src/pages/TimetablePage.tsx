@@ -1,5 +1,6 @@
 import { type SyntheticEvent, useMemo, useState } from 'react';
 import { Time24Picker } from '../components/TimePicker';
+import { type Language, translateHeadsetStatus, translations } from '../i18n';
 import type { HeadsetDto, TimeBlock, WeekDayInfo } from '../types';
 import {
     clockToMinutes,
@@ -17,6 +18,7 @@ interface TimetablePageProps {
     weekOffset: number;
     onChangeWeekOffset: (nextOffset: number) => void;
     weekDays: WeekDayInfo[];
+    lang: Language;
     onBookReservation: (headsetId: number, startIso: string, endIso: string) => Promise<void>;
 }
 
@@ -28,11 +30,13 @@ export function TimetablePage({
                                   weekOffset,
                                   onChangeWeekOffset,
                                   weekDays,
+                                  lang,
                                   onBookReservation,
                               }: TimetablePageProps) {
     const [selectedDate, setSelectedDate] = useState<string>(() => toIsoDateString(new Date()));
     const [bookingStartTime, setBookingStartTime] = useState<string>('14:00');
     const [bookingEndTime, setBookingEndTime] = useState<string>('15:00');
+    const t = translations[lang].timetable;
 
     const activeHeadset = useMemo(
         () => headsets.find((h) => h.id === selectedHeadsetId) || null,
@@ -60,10 +64,11 @@ export function TimetablePage({
         <section className="page-transition">
             <div className="section-header-row">
                 <div>
-                    <h1>Weekly 24-Hour VR Timetable</h1>
+                    <h1>{t.title}</h1>
                     <p className="subtitle">
-                        Step backward or forward across weeks. Click any <strong>Green</strong> available window
-                        on any day to load its 00:00–24:00 interval.
+                        {t.subtitlePrefix}
+                        <strong>{t.subtitleGreen}</strong>
+                        {t.subtitleSuffix}
                     </p>
                 </div>
                 <div className="week-nav-controls">
@@ -72,45 +77,46 @@ export function TimetablePage({
                         className="secondary-btn"
                         onClick={() => onChangeWeekOffset(weekOffset - 1)}
                     >
-                        ← Prev Week
+                        {t.prevWeek}
                     </button>
                     <button
                         type="button"
                         className={weekOffset === 0 ? 'primary-btn' : 'secondary-btn'}
                         onClick={() => onChangeWeekOffset(0)}
                     >
-                        Current Week
+                        {t.currentWeek}
                     </button>
                     <button
                         type="button"
                         className="secondary-btn"
                         onClick={() => onChangeWeekOffset(weekOffset + 1)}
                     >
-                        Next Week →
+                        {t.nextWeek}
                     </button>
                 </div>
             </div>
 
             <div className="timetable-toolbar card">
                 <label className="toolbar-field">
-                    <span>1. Select Available VR Headset:</span>
+                    <span>{t.selectHeadsetLabel}</span>
                     <select
                         value={selectedHeadsetId}
                         onChange={(e) => onSelectHeadsetId(Number(e.target.value))}
                     >
                         <option value={0} disabled>
-                            -- Select Headset --
+                            {t.selectHeadsetPlaceholder}
                         </option>
                         {headsets.map((h) => (
                             <option key={h.id} value={h.id} disabled={h.status !== 'Available'}>
-                                {h.name} ({formatHuf(h.hourlyPrice)} / hr) — [{h.status}]
+                                {h.name} ({formatHuf(h.hourlyPrice)} / {translations[lang].home.hourShort}) — [
+                                {translateHeadsetStatus(h.status, lang)}]
                             </option>
                         ))}
                     </select>
                 </label>
 
                 <div className="week-range-badge">
-                    <span>Selected Week:</span>
+                    <span>{t.selectedWeekLabel}</span>
                     <strong>
                         {weekDays[0].iso.replaceAll('-', '.')} — {weekDays[6].iso.replaceAll('-', '.')}
                     </strong>
@@ -119,7 +125,7 @@ export function TimetablePage({
 
             <div className="weekly-matrix card">
                 <div className="matrix-ruler">
-                    <div className="matrix-day-col-header">Day / Date</div>
+                    <div className="matrix-day-col-header">{t.dayDateHeader}</div>
                     <div className="matrix-hours-header">
                         <span>00:00</span>
                         <span>04:00</span>
@@ -147,9 +153,9 @@ export function TimetablePage({
                                 className="matrix-day-label"
                                 onClick={() => setSelectedDate(day.iso)}
                             >
-                <span className="day-name">
-                  {day.dayName} {day.isToday && <em className="today-dot">TODAY</em>}
-                </span>
+                                <span className="day-name">
+                                    {day.dayName} {day.isToday && <em className="today-dot">{t.todayBadge}</em>}
+                                </span>
                                 <span className="day-date">{day.iso.replaceAll('-', '.')}</span>
                             </button>
 
@@ -166,16 +172,16 @@ export function TimetablePage({
                                             key={blockKey}
                                             className="timeline-block-green"
                                             style={{ left: `${leftPercent}%`, width: `${widthPercent}%` }}
-                                            title={`Available: ${formatTimeShort24(block.startTime)} - ${formatTimeShort24(block.endTime)}`}
+                                            title={`${t.availableTooltip}: ${formatTimeShort24(block.startTime)} - ${formatTimeShort24(block.endTime)}`}
                                             onClick={() => {
                                                 setSelectedDate(day.iso);
                                                 setBookingStartTime(formatTimeShort24(block.startTime));
                                                 setBookingEndTime(formatTimeShort24(block.endTime));
                                             }}
                                         >
-                      <span>
-                        {formatTimeShort24(block.startTime)}–{formatTimeShort24(block.endTime)}
-                      </span>
+                                            <span>
+                                                {formatTimeShort24(block.startTime)}–{formatTimeShort24(block.endTime)}
+                                            </span>
                                         </button>
                                     );
                                 })}
@@ -188,22 +194,25 @@ export function TimetablePage({
             <form className="booking-form card" onSubmit={handleSubmit}>
                 <div className="booking-form-header">
                     <div>
-                        <h3>2. Customize Your 24-Hour Reservation Interval (Min. 30 mins)</h3>
-                        <p className="muted-text">
-                            All times use strict 00:00–24:00 format. Pricing is calculated automatically in HUF.
-                        </p>
+                        <h3>{t.customizeTitle}</h3>
+                        <p className="muted-text">{t.customizeSub}</p>
                     </div>
                     <div className="price-summary-pill">
-            <span>
-              Duration: <strong>{bookingDurationMinutes} mins</strong>
-            </span>
-                        <span className="total-huf">Total: {formatHuf(estimatedPriceHuf)}</span>
+                        <span>
+                            {t.durationLabel}{' '}
+                            <strong>
+                                {bookingDurationMinutes} {t.minsShort}
+                            </strong>
+                        </span>
+                        <span className="total-huf">
+                            {t.totalLabel} {formatHuf(estimatedPriceHuf)}
+                        </span>
                     </div>
                 </div>
 
                 <div className="form-row">
                     <label>
-                        <span>Selected Date:</span>
+                        <span>{t.selectedDateLabel}</span>
                         <input
                             type="date"
                             value={selectedDate}
@@ -213,17 +222,17 @@ export function TimetablePage({
                     </label>
 
                     <div className="field-group">
-                        <span>Start Time (00–24):</span>
+                        <span>{t.startTimeLabel}</span>
                         <Time24Picker value={bookingStartTime} onChange={setBookingStartTime} />
                     </div>
 
                     <div className="field-group">
-                        <span>End Time (00–24):</span>
+                        <span>{t.endTimeLabel}</span>
                         <Time24Picker value={bookingEndTime} onChange={setBookingEndTime} />
                     </div>
 
                     <button type="submit" className="primary-btn glow-btn">
-                        Confirm Booking ({formatHuf(estimatedPriceHuf)})
+                        {t.confirmBookingBtn(formatHuf(estimatedPriceHuf))}
                     </button>
                 </div>
             </form>

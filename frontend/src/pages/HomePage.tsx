@@ -1,3 +1,4 @@
+import { type Language, translateHeadsetStatus, translations } from '../i18n';
 import type { GameDto, HeadsetDto, PageRoute, RigDto } from '../types';
 import { DEFAULT_HEADSET_IMG, formatHuf, getGameCoverUrl } from '../utils/formatters';
 
@@ -5,6 +6,7 @@ interface HomePageProps {
     headsets: HeadsetDto[];
     games: GameDto[];
     rigs: RigDto[];
+    lang: Language;
     onNavigate: (route: PageRoute) => void;
     onSelectHeadsetForBooking: (headsetId: number) => void;
     onOpenGameDetails: (game: GameDto) => void;
@@ -14,58 +16,58 @@ export function HomePage({
                              headsets,
                              games,
                              rigs,
+                             lang,
                              onNavigate,
                              onSelectHeadsetForBooking,
                              onOpenGameDetails,
                          }: HomePageProps) {
+    const t = translations[lang].home;
+
     return (
         <div className="page-transition">
             <section className="hero-section">
                 <div className="hero-copy">
-                    <div className="eyebrow-pill">NEXT-GEN SPATIAL GAMING ARENA • DEBRECEN</div>
+                    <div className="eyebrow-pill">{t.eyebrow}</div>
                     <h1 className="hero-title">
-                        Step Beyond Reality Into <span className="gradient-text">Hyper-Immersion.</span>
+                        {t.heroTitlePrefix}
+                        <span className="gradient-text">{t.heroTitleHighlight}</span>
                     </h1>
-                    <p className="hero-description">
-                        Experience untethered micro-OLED clarity, full-body finger tracking, and RTX 5090
-                        liquid-cooled rigs. Inspect real-time weekly 24-hour availability and reserve your
-                        station in seconds.
-                    </p>
+                    <p className="hero-description">{t.heroDesc}</p>
                     <div className="hero-cta-row">
                         <button
                             type="button"
                             className="primary-btn glow-btn large"
                             onClick={() => onNavigate('TIMETABLE')}
                         >
-                            Reserve Your VR Pod →
+                            {t.ctaReserve}
                         </button>
                         <button
                             type="button"
                             className="secondary-btn large"
                             onClick={() => onNavigate('GAMES')}
                         >
-                            Explore Steam VR Library
+                            {t.ctaExploreGames}
                         </button>
                     </div>
 
                     <div className="stats-strip">
                         <div className="stat-item">
-              <span className="stat-value">
-                {headsets.filter((h) => h.status === 'Available').length} / {headsets.length}
-              </span>
-                            <span className="stat-label">Active VR Headsets</span>
+                            <span className="stat-value">
+                                {headsets.filter((h) => h.status === 'Available').length} / {headsets.length}
+                            </span>
+                            <span className="stat-label">{t.statActiveHeadsets}</span>
                         </div>
                         <div className="stat-item">
                             <span className="stat-value">{games.length}+</span>
-                            <span className="stat-label">Steam VR Titles</span>
+                            <span className="stat-label">{t.statSteamTitles}</span>
                         </div>
                         <div className="stat-item">
                             <span className="stat-value">{rigs.length}</span>
-                            <span className="stat-label">Custom Liquid Rigs</span>
+                            <span className="stat-label">{t.statCustomRigs}</span>
                         </div>
                         <div className="stat-item">
                             <span className="stat-value">00–24h</span>
-                            <span className="stat-label">Live Weekly Booking</span>
+                            <span className="stat-label">{t.statLiveBooking}</span>
                         </div>
                     </div>
                 </div>
@@ -78,10 +80,10 @@ export function HomePage({
                             className="hero-img"
                         />
                         <div className="hero-card-overlay">
-                            <span className="badge badge-Available">LIVE TELEMETRY READY</span>
-                            <h3>{headsets[0]?.name || 'Valve Index Pro'}</h3>
+                            <span className="badge badge-Available">{t.liveTelemetry}</span>
+                            <h3>{headsets[0]?.name || 'Valve Index'}</h3>
                             <p className="hero-price-tag">
-                                From {formatHuf(headsets[0]?.hourlyPrice || 5500)} / hour
+                                {t.fromPriceHour(formatHuf(headsets[0]?.hourlyPrice || 5500))}
                             </p>
                         </div>
                     </div>
@@ -91,11 +93,11 @@ export function HomePage({
             <section className="home-section">
                 <div className="section-header-row">
                     <div>
-                        <h2>Featured VR Fleet</h2>
-                        <p className="subtitle">Precision optics and sub-millimeter tracking.</p>
+                        <h2>{t.featuredFleetTitle}</h2>
+                        <p className="subtitle">{t.featuredFleetSub}</p>
                     </div>
                     <button type="button" className="secondary-btn" onClick={() => onNavigate('HEADSETS')}>
-                        View All Headsets →
+                        {t.viewAllHeadsets}
                     </button>
                 </div>
                 <div className="card-grid">
@@ -104,15 +106,15 @@ export function HomePage({
                             <div className="card-image-wrap">
                                 <img src={h.imageUrl || DEFAULT_HEADSET_IMG} alt={h.name} />
                                 <span className={`badge floating-badge badge-${h.status.replace(/[^a-zA-Z]/g, '')}`}>
-                  {h.status}
-                </span>
+                                    {translateHeadsetStatus(h.status, lang)}
+                                </span>
                             </div>
                             <div className="card-body">
                                 <h3>{h.name}</h3>
-                                <p className="price-tag">{formatHuf(h.hourlyPrice)} / hr</p>
-                                <p className="muted-text">
-                                    {h.description || 'High-refresh spatial display with precision motion controllers.'}
+                                <p className="price-tag">
+                                    {formatHuf(h.hourlyPrice)} / {t.hourShort}
                                 </p>
+                                <p className="muted-text">{h.description}</p>
                                 <button
                                     type="button"
                                     className="primary-btn full-btn"
@@ -124,7 +126,7 @@ export function HomePage({
                                         }
                                     }}
                                 >
-                                    {h.status === 'Available' ? 'Check Weekly Slots' : 'Inspect Specs'}
+                                    {h.status === 'Available' ? t.checkWeeklySlots : t.inspectSpecs}
                                 </button>
                             </div>
                         </div>
@@ -135,13 +137,11 @@ export function HomePage({
             <section className="home-section">
                 <div className="section-header-row">
                     <div>
-                        <h2>Steam VR Blockbusters</h2>
-                        <p className="subtitle">
-                            Synced directly with the official Steam Store API for live ratings & screenshots.
-                        </p>
+                        <h2>{t.blockbustersTitle}</h2>
+                        <p className="subtitle">{t.blockbustersSub}</p>
                     </div>
                     <button type="button" className="secondary-btn" onClick={() => onNavigate('GAMES')}>
-                        Full Game Library →
+                        {t.fullGameLibrary}
                     </button>
                 </div>
                 <div className="card-grid">
@@ -159,7 +159,7 @@ export function HomePage({
                                     className="secondary-btn full-btn"
                                     onClick={() => onOpenGameDetails(g)}
                                 >
-                                    Inspect Live Steam Data
+                                    {t.inspectLiveSteam}
                                 </button>
                             </div>
                         </div>

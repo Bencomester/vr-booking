@@ -3,6 +3,7 @@ import './App.css';
 import { TOKEN_STORAGE_KEY, apiFetch } from './api';
 import { GameSteamModal } from './components/Modals';
 import { Navbar } from './components/Navbar';
+import { type Language, translations } from './i18n';
 import { AccountPage } from './pages/AccountPage';
 import { AdminStudioPage } from './pages/AdminStudioPage';
 import { GamesPage, HeadsetsPage, RigsPage } from './pages/CatalogPages';
@@ -29,6 +30,10 @@ import { logger } from './utils/logger';
 
 export function App() {
     const [route, setRoute] = useState<PageRoute>(() => parsePathToRoute(window.location.pathname));
+    const [lang, setLang] = useState<Language>(() => {
+        const saved = localStorage.getItem('vr_lang');
+        return saved === 'hu' ? 'hu' : 'en';
+    });
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -51,7 +56,17 @@ export function App() {
     const [adminAvailabilities, setAdminAvailabilities] = useState<AvailabilityDto[]>([]);
     const [adminReservations, setAdminReservations] = useState<ReservationDto[]>([]);
 
-    const weekDays = useMemo(() => buildWeekDays(weekOffset), [weekOffset]);
+    const weekDays = useMemo(() => buildWeekDays(weekOffset, lang), [weekOffset, lang]);
+    const tMsg = translations[lang].messages;
+
+    const toggleLang = () => {
+        setLang((prev) => {
+            const next: Language = prev === 'en' ? 'hu' : 'en';
+            localStorage.setItem('vr_lang', next);
+            logger.info('I18N', `Switched UI language to ${next.toUpperCase()}`);
+            return next;
+        });
+    };
 
     const navigateTo = (nextRoute: PageRoute) => {
         const targetPath = ROUTE_PATHS[nextRoute];
@@ -192,7 +207,7 @@ export function App() {
             localStorage.setItem(TOKEN_STORAGE_KEY, res.token);
             setUser(res.user);
             await loadAccountData();
-            showSuccess(`Welcome back, ${res.user.fullName}!`);
+            showSuccess(tMsg.welcomeBack(res.user.fullName));
         } catch (err) {
             showError((err as Error).message);
         }
@@ -206,7 +221,7 @@ export function App() {
                 body: JSON.stringify(dto),
             });
             setUser(updated);
-            showSuccess('Profile updated successfully!');
+            showSuccess(tMsg.profileUpdated);
         } catch (err) {
             showError((err as Error).message);
         }
@@ -218,7 +233,7 @@ export function App() {
         setUser(null);
         setMyReservations([]);
         navigateTo('HOME');
-        showSuccess('Logged out successfully.');
+        showSuccess(tMsg.loggedOut);
     };
 
     const handleBookReservation = async (
@@ -227,7 +242,7 @@ export function App() {
         endTime: string
     ) => {
         if (!user) {
-            showError('Please log in to book a VR session.');
+            showError(tMsg.pleaseLoginToBook);
             navigateTo('ACCOUNT');
             return;
         }
@@ -236,9 +251,9 @@ export function App() {
             logger.info('BOOKING', 'Creating reservation', payload);
             await apiFetch<ReservationDto>('/reservation', {
                 method: 'POST',
-                body: JSON.stringify({ headsetId, startTime, endTime }),
+                body: JSON.stringify(payload),
             });
-            showSuccess('Reservation confirmed!');
+            showSuccess(tMsg.reservationConfirmed);
             await refreshAll();
         } catch (err) {
             showError((err as Error).message);
@@ -249,7 +264,7 @@ export function App() {
         try {
             logger.info('BOOKING', `Cancelling reservation #${id}`);
             await apiFetch<ReservationDto>(`/reservation/${id}/cancel`, { method: 'POST' });
-            showSuccess('Reservation cancelled.');
+            showSuccess(tMsg.reservationCancelled);
             await refreshAll();
         } catch (err) {
             showError((err as Error).message);
@@ -265,18 +280,24 @@ export function App() {
                 <div className="cyber-grid" />
             </div>
 
-            <Navbar route={route} user={user} onNavigate={navigateTo} />
+            <Navbar
+                route={route}
+                user={user}
+                lang={lang}
+                onToggleLang={toggleLang}
+                onNavigate={navigateTo}
+            />
 
             {errorMsg && (
                 <button type="button" className="banner error-banner" onClick={() => setErrorMsg(null)}>
                     <span>⚠ {errorMsg}</span>
-                    <span className="banner-dismiss">Dismiss ✕</span>
+                    <span className="banner-dismiss">{translations[lang].nav.dismiss}</span>
                 </button>
             )}
             {successMsg && (
                 <button type="button" className="banner success-banner" onClick={() => setSuccessMsg(null)}>
                     <span>✦ {successMsg}</span>
-                    <span className="banner-dismiss">Dismiss ✕</span>
+                    <span className="banner-dismiss">{translations[lang].nav.dismiss}</span>
                 </button>
             )}
 
@@ -286,6 +307,7 @@ export function App() {
                         headsets={headsets}
                         games={games}
                         rigs={rigs}
+                        lang={lang}
                         onNavigate={navigateTo}
                         onSelectHeadsetForBooking={(id) => {
                             setSelectedHeadsetId(id);
@@ -304,17 +326,23 @@ export function App() {
                         weekOffset={weekOffset}
                         onChangeWeekOffset={setWeekOffset}
                         weekDays={weekDays}
+                        lang={lang}
                         onBookReservation={handleBookReservation}
                     />
                 )}
 
                 {route === 'GAMES' && (
-                    <GamesPage games={games} onOpenGameDetails={(g) => void openGameDetails(g)} />
+                    <GamesPage
+                        games={games}
+                        lang={lang}
+                        onOpenGameDetails={(g) => void openGameDetails(g)}
+                    />
                 )}
 
                 {route === 'HEADSETS' && (
                     <HeadsetsPage
                         headsets={headsets}
+                        lang={lang}
                         onBookHeadset={(id) => {
                             setSelectedHeadsetId(id);
                             navigateTo('TIMETABLE');
@@ -322,12 +350,13 @@ export function App() {
                     />
                 )}
 
-                {route === 'RIGS' && <RigsPage rigs={rigs} />}
+                {route === 'RIGS' && <RigsPage rigs={rigs} lang={lang} />}
 
                 {route === 'ACCOUNT' && (
                     <AccountPage
                         user={user}
                         myReservations={myReservations}
+                        lang={lang}
                         onLoginOrRegister={handleLoginOrRegister}
                         onUpdateProfile={handleUpdateProfile}
                         onCancelReservation={handleCancelReservation}
@@ -338,6 +367,7 @@ export function App() {
                 {route.startsWith('ADMIN_') && user?.role === 'Admin' && (
                     <AdminStudioPage
                         route={route}
+                        lang={lang}
                         onNavigate={navigateTo}
                         games={games}
                         headsets={headsets}
@@ -358,6 +388,7 @@ export function App() {
                         steamDetails={steamDetails}
                         steamLoading={steamLoading}
                         steamError={steamError}
+                        lang={lang}
                         onClose={() => setSelectedGame(null)}
                         onBookNow={() => {
                             setSelectedGame(null);

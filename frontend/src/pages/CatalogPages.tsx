@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { HeadsetModal, RigModal } from '../components/Modals';
+import { type Language, translateHeadsetStatus, translations } from '../i18n';
 import type { GameDto, HeadsetDto, RigDto } from '../types';
 import {
     DEFAULT_HEADSET_IMG,
@@ -10,18 +11,19 @@ import {
 
 interface GamesPageProps {
     games: GameDto[];
+    lang: Language;
     onOpenGameDetails: (game: GameDto) => void;
 }
 
-export function GamesPage({ games, onOpenGameDetails }: GamesPageProps) {
+export function GamesPage({ games, lang, onOpenGameDetails }: Readonly<GamesPageProps>) {
+    const t = translations[lang].catalog;
+
     return (
         <section className="page-transition">
             <div className="section-header-row">
                 <div>
-                    <h1>Steam VR Games Library</h1>
-                    <p className="subtitle">
-                        Every game includes cover artwork and live Steam Store API telemetry lookup.
-                    </p>
+                    <h1>{t.gamesTitle}</h1>
+                    <p className="subtitle">{t.gamesSub}</p>
                 </div>
             </div>
 
@@ -40,7 +42,7 @@ export function GamesPage({ games, onOpenGameDetails }: GamesPageProps) {
                                 className="primary-btn full-btn"
                                 onClick={() => onOpenGameDetails(g)}
                             >
-                                View Steam API Details
+                                {t.viewSteamDetails}
                             </button>
                         </div>
                     </div>
@@ -52,18 +54,20 @@ export function GamesPage({ games, onOpenGameDetails }: GamesPageProps) {
 
 interface HeadsetsPageProps {
     headsets: HeadsetDto[];
+    lang: Language;
     onBookHeadset: (headsetId: number) => void;
 }
 
-export function HeadsetsPage({ headsets, onBookHeadset }: HeadsetsPageProps) {
+export function HeadsetsPage({ headsets, lang, onBookHeadset }: Readonly<HeadsetsPageProps>) {
     const [selectedHeadset, setSelectedHeadset] = useState<HeadsetDto | null>(null);
+    const t = translations[lang].catalog;
 
     return (
         <section className="page-transition">
             <div className="section-header-row">
                 <div>
-                    <h1>VR Headsets Fleet</h1>
-                    <p className="subtitle">Compare optics, installed Steam games, and hourly HUF rates.</p>
+                    <h1>{t.headsetsTitle}</h1>
+                    <p className="subtitle">{t.headsetsSub}</p>
                 </div>
             </div>
 
@@ -73,23 +77,23 @@ export function HeadsetsPage({ headsets, onBookHeadset }: HeadsetsPageProps) {
                         <div className="card-image-wrap">
                             <img src={h.imageUrl || DEFAULT_HEADSET_IMG} alt={h.name} />
                             <span className={`badge floating-badge badge-${h.status.replace(/[^a-zA-Z]/g, '')}`}>
-                {h.status}
-              </span>
+                                {translateHeadsetStatus(h.status, lang)}
+                            </span>
                         </div>
                         <div className="card-body">
                             <h3>{h.name}</h3>
-                            <p className="price-tag">{formatHuf(h.hourlyPrice)} / hour</p>
-                            <p className="muted-text">
-                                {h.description || 'High-fidelity VR headset ready for room-scale experiences.'}
+                            <p className="price-tag">
+                                {formatHuf(h.hourlyPrice)} {t.perHour}
                             </p>
+                            <p className="muted-text">{h.description}</p>
                             <div className="installed-tags">
                                 {(h.installedGames || []).map((g) => (
                                     <span key={g.id} className="game-chip">
-                    {g.title}
-                  </span>
+                                        {g.title}
+                                    </span>
                                 ))}
                                 {(!h.installedGames || h.installedGames.length === 0) && (
-                                    <span className="muted-text">No pre-installed games listed</span>
+                                    <span className="muted-text">{t.noGamesListed}</span>
                                 )}
                             </div>
                             <div className="btn-group" style={{ marginTop: '16px' }}>
@@ -98,7 +102,7 @@ export function HeadsetsPage({ headsets, onBookHeadset }: HeadsetsPageProps) {
                                     className="secondary-btn"
                                     onClick={() => setSelectedHeadset(h)}
                                 >
-                                    Specs & Games
+                                    {t.specsAndGames}
                                 </button>
                                 {h.status === 'Available' && h.id !== undefined && (
                                     <button
@@ -106,7 +110,7 @@ export function HeadsetsPage({ headsets, onBookHeadset }: HeadsetsPageProps) {
                                         className="primary-btn"
                                         onClick={() => onBookHeadset(h.id!)}
                                     >
-                                        Book Now
+                                        {t.bookNow}
                                     </button>
                                 )}
                             </div>
@@ -118,6 +122,7 @@ export function HeadsetsPage({ headsets, onBookHeadset }: HeadsetsPageProps) {
             {selectedHeadset && (
                 <HeadsetModal
                     headset={selectedHeadset}
+                    lang={lang}
                     onClose={() => setSelectedHeadset(null)}
                     onBookHeadset={onBookHeadset}
                 />
@@ -128,19 +133,19 @@ export function HeadsetsPage({ headsets, onBookHeadset }: HeadsetsPageProps) {
 
 interface RigsPageProps {
     rigs: RigDto[];
+    lang: Language;
 }
 
-export function RigsPage({ rigs }: RigsPageProps) {
+export function RigsPage({ rigs, lang }: Readonly<RigsPageProps>) {
     const [selectedRig, setSelectedRig] = useState<RigDto | null>(null);
+    const t = translations[lang].catalog;
 
     return (
         <section className="page-transition">
             <div className="section-header-row">
                 <div>
-                    <h1>High-Performance VR PC Rigs</h1>
-                    <p className="subtitle">
-                        Custom liquid-cooled workstations engineered for zero-latency VR rendering.
-                    </p>
+                    <h1>{t.rigsTitle}</h1>
+                    <p className="subtitle">{t.rigsSub}</p>
                 </div>
             </div>
 
@@ -173,14 +178,14 @@ export function RigsPage({ rigs }: RigsPageProps) {
                                 className="secondary-btn full-btn"
                                 onClick={() => setSelectedRig(r)}
                             >
-                                Inspect Full Build
+                                {t.inspectFullBuild}
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {selectedRig && <RigModal rig={selectedRig} onClose={() => setSelectedRig(null)} />}
+            {selectedRig && <RigModal rig={selectedRig} lang={lang} onClose={() => setSelectedRig(null)} />}
         </section>
     );
 }
