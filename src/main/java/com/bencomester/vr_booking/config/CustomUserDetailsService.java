@@ -3,6 +3,7 @@ package com.bencomester.vr_booking.config;
 import com.bencomester.vr_booking.data.entity.UserEntity;
 import com.bencomester.vr_booking.data.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
+@NullMarked
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {

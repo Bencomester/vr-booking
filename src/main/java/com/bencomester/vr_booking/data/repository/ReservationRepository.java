@@ -9,7 +9,6 @@ import java.util.List;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<ReservationEntity, Long> {
-    List<ReservationEntity> findAllByStatusNot(ReservationStatus status);
     List<ReservationEntity> findAllByHeadset_idAndStatusNot(Long headsetId, ReservationStatus status);
     List<ReservationEntity> findAllByHeadset_id(Long headsetId);
     List<ReservationEntity> findAllByUser_id(Long userId);

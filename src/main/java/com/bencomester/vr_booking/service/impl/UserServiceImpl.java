@@ -26,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -62,9 +64,9 @@ public class UserServiceImpl implements UserService {
         user.setFullName(registerRequestDto.getFullName().trim());
         user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(registerRequestDto.getPassword()));
-        user.setPhoneNumber(registerRequestDto.getPhoneNumber());
         user.setPhoneNumber(registerRequestDto.getPhoneNumber() != null ? registerRequestDto.getPhoneNumber().trim() : null);
         user.setProfilePictureUrl(AllowedAvatars.DEFAULT_AVATAR);
+        user.setCreatedAt(LocalDateTime.now(ZoneId.systemDefault()));
         user.setRole(userRole);
 
         user = userRepository.save(user);

@@ -87,3 +87,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Java / Maven / Gradle
+*.jar
+*.war
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# Environment & Secrets
+.env.*
+!.env.example
+application-prod.properties
+
+# IDEs & OS
+Thumbs.db
+
+# Local archives & reports
+*.zip
+diff*.txt
+issues.html

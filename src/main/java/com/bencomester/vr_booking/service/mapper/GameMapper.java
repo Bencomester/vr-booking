@@ -12,6 +12,5 @@ public interface GameMapper {
     GameDto toDto(GameEntity gameEntity);
     List<GameDto> toDto(List<GameEntity> gameEntities);
     GameEntity toEntity(GameDto gameDto);
-    List<GameEntity> toEntity(List<GameDto> gameDtos);
     Set<GameEntity> toEntity(Set<GameDto> gameDtos);
 }

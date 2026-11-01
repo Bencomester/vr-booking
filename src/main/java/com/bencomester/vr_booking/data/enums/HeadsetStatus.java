@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum HeadsetStatus {
     AVAILABLE("Available"),
     MAINTENANCE("Maintenance"),
-    COMING_SOON("Coming Soon..."),;
+    COMING_SOON("Coming Soon...");
 
     private final String name;
 

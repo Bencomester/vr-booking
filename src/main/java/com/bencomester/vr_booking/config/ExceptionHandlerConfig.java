@@ -2,6 +2,8 @@ package com.bencomester.vr_booking.config;
 
 import com.bencomester.vr_booking.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+@NullMarked
 @RestControllerAdvice
 public class ExceptionHandlerConfig implements ResponseBodyAdvice<Object> {
 
@@ -33,16 +36,14 @@ public class ExceptionHandlerConfig implements ResponseBodyAdvice<Object> {
     }
 
     @Override
-    public Object beforeBodyWrite(
-            Object body,
+    public @Nullable Object beforeBodyWrite(
+            @Nullable Object body,
             MethodParameter returnType,
             MediaType selectedContentType,
             Class<? extends HttpMessageConverter<?>> selectedConverterType,
             ServerHttpRequest request,
             ServerHttpResponse response) {
-
         if (body instanceof Response) return body;
-
         return Response.success(body);
     }
 
@@ -104,7 +105,7 @@ public class ExceptionHandlerConfig implements ResponseBodyAdvice<Object> {
         );
     }
 
-    private ResponseEntity<Response<Void>> buildErrorResponse(HttpStatus status, String code, String message) {
-        return new ResponseEntity<>(Response.failure(code, message), status);
+    private ResponseEntity<Response<Void>> buildErrorResponse(HttpStatus status, String code, @Nullable String message) {
+        return new ResponseEntity<>(Response.failure(code, message != null ? message : "Error"), status);
     }
 }
