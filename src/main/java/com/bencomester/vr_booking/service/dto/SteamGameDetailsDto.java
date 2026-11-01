@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SteamGameDetailsDto {
-    private String appId;
+    private Integer appId;
     private String name;
     private String shortDescription;
     private String aboutTheGame;

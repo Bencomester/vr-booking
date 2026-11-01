@@ -165,7 +165,7 @@ export function AdminStudioPage({
 
     const handleFetchSteamForAdminForm = async () => {
         const appId = gameForm.steamAppId;
-        if (!appId) {
+        if (!appId || appId <= 0) {
             onShowError('Enter a numeric Steam App ID first.');
             return;
         }
@@ -179,7 +179,7 @@ export function AdminStudioPage({
                 title: details.name || prev.title,
                 description: details.shortDescription || prev.description,
                 imageUrl: details.headerImage || prev.imageUrl,
-                steamAppId: details.appId || prev.steamAppId,
+                steamAppId: Number(details.appId) || prev.steamAppId,
             }));
             onShowSuccess(`Loaded "${details.name}" from Steam API!`);
         } catch (err) {
@@ -702,10 +702,13 @@ export function AdminStudioPage({
                                 <div className="steam-fetch-row">
                                     <input
                                         type="number"
-                                        placeholder="e.g. 546560 (Half-Life: Alyx)"
-                                        value={gameForm.steamAppId || 0}
+                                        placeholder="546560"
+                                        value={gameForm.steamAppId || ''}
                                         onChange={(e) =>
-                                            setGameForm({ ...gameForm, steamAppId: e.target.valueAsNumber })
+                                            setGameForm({
+                                                ...gameForm,
+                                                steamAppId: Number(e.target.value) || 0,
+                                            })
                                         }
                                     />
                                     <button

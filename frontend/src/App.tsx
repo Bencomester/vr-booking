@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
-import { apiFetch } from './api';
+import { TOKEN_STORAGE_KEY, apiFetch } from './api';
 import { GameSteamModal } from './components/Modals';
 import { Navbar } from './components/Navbar';
 import { AccountPage } from './pages/AccountPage';
@@ -15,6 +15,7 @@ import {
     type HeadsetDto,
     type PageRoute,
     ROUTE_PATHS,
+    type ReservationCreateDto,
     type ReservationDto,
     type RigDto,
     type SteamGameDetailsDto,
@@ -104,7 +105,7 @@ export function App() {
     };
 
     const loadAccountData = async () => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(TOKEN_STORAGE_KEY);
         if (!token || token === 'null' || token === 'undefined') return;
         try {
             const [account, myRes] = await Promise.all([
@@ -184,7 +185,7 @@ export function App() {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
-            localStorage.setItem('token', res.token);
+            localStorage.setItem(TOKEN_STORAGE_KEY, res.token);
             setUser(res.user);
             await loadAccountData();
             showSuccess(`Welcome back, ${res.user.fullName}!`);
@@ -207,7 +208,7 @@ export function App() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
         setUser(null);
         setMyReservations([]);
         navigateTo('HOME');

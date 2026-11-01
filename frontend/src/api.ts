@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:8080/vr/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/vr/api';
+export const TOKEN_STORAGE_KEY = 'token';
 
 interface WrappedResponse<T> {
     success: boolean;
@@ -8,7 +9,8 @@ interface WrappedResponse<T> {
 }
 
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = localStorage.getItem('vr_token');
+    const method = options.method || 'GET';
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',

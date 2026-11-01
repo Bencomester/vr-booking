@@ -95,6 +95,7 @@ public class GameServiceImpl implements GameService {
         if (id.isEmpty() || !id.matches("\\d+")) {
             throw new InvalidInputException("Invalid numeric Steam App ID: " + id);
         }
+        int numericAppId = Integer.parseInt(id);
         try {
             String url = "https://store.steampowered.com/api/appdetails?appids=" + id + "&l=english";
             HttpRequest request = HttpRequest.newBuilder()
@@ -129,9 +130,11 @@ public class GameServiceImpl implements GameService {
                     ? data.path("metacritic").path("score").asInt()
                     : null;
 
+            String fetchedName = data.path("name").asText("");
+
             return new SteamGameDetailsDto(
-                    id,
-                    data.path("name").asText(""),
+                    numericAppId,
+                    fetchedName,
                     data.path("short_description").asText(""),
                     data.path("about_the_game").asText(""),
                     data.path("header_image").asText("https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/" + id + "/header.jpg"),
@@ -155,7 +158,7 @@ public class GameServiceImpl implements GameService {
 
     private void applySteamDefaultImage(GameDto dto) {
         if ((dto.getImageUrl() == null || dto.getImageUrl().isBlank())
-                && dto.getSteamAppId() != null) {
+                && dto.getSteamAppId() != null && dto.getSteamAppId() > 0) {
             dto.setImageUrl("https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/"
                     + dto.getSteamAppId() + "/header.jpg");
         }
