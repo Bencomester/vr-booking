@@ -1,10 +1,7 @@
 package com.bencomester.vr_booking.service.dto;
 
 import com.bencomester.vr_booking.data.enums.HeadsetStatus;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +28,7 @@ public class HeadsetDto {
     private String description;
 
     @Size(max = 1000)
+    @Pattern(regexp = "^(https?://.*)?$", message = "Image URL must start with http:// or https://")
     private String imageUrl;
     private Set<GameDto> installedGames;
 }

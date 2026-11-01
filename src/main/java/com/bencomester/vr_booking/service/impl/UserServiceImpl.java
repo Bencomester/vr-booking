@@ -1,5 +1,6 @@
 package com.bencomester.vr_booking.service.impl;
 
+import com.bencomester.vr_booking.config.AllowedAvatars;
 import com.bencomester.vr_booking.config.CustomUserDetailsService;
 import com.bencomester.vr_booking.config.JwtService;
 import com.bencomester.vr_booking.data.entity.RoleEntity;
@@ -59,7 +60,8 @@ public class UserServiceImpl implements UserService {
         user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(registerRequestDto.getPassword()));
         user.setPhoneNumber(registerRequestDto.getPhoneNumber());
-        user.setCreatedAt(LocalDateTime.now());
+        user.setPhoneNumber(registerRequestDto.getPhoneNumber() != null ? registerRequestDto.getPhoneNumber().trim() : null);
+        user.setProfilePictureUrl(AllowedAvatars.DEFAULT_AVATAR);
         user.setRole(userRole);
         user = userRepository.save(user);
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
@@ -69,7 +71,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
         String normalizedEmail = loginRequestDto.getEmail().trim().toLowerCase(Locale.ROOT);
 
@@ -80,7 +82,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG));
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequestDto.getEmail());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedEmail);
         String token = jwtService.generateToken(userDetails);
 
         return new AuthResponseDto(token, userMapper.toDto(user));
@@ -98,10 +100,19 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto updateAccountDetails(String email, UserUpdateDto userUpdateDto) {
         UserEntity user = userRepository.findByEmail(email)
-        user.setFullName(userUpdateDto.getFullName());
-        user.setPhoneNumber(userUpdateDto.getPhoneNumber());
-        user.setProfilePictureUrl(userUpdateDto.getProfilePictureUrl());
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MSG));
+
+        String requestedAvatar = userUpdateDto.getProfilePictureUrl();
+        if (requestedAvatar == null || requestedAvatar.isBlank()) {
+            user.setProfilePictureUrl(AllowedAvatars.DEFAULT_AVATAR);
+        } else if (AllowedAvatars.isAllowed(requestedAvatar)) {
+            user.setProfilePictureUrl(requestedAvatar.trim());
+        } else {
+            throw new InvalidInputException("Please select a valid profile picture from the preset list.");
+        }
+
+        user.setFullName(userUpdateDto.getFullName().trim());
+        user.setPhoneNumber(userUpdateDto.getPhoneNumber() != null ? userUpdateDto.getPhoneNumber().trim() : null);
         UserEntity saved = userRepository.save(user);
         return userMapper.toDto(saved);
     }

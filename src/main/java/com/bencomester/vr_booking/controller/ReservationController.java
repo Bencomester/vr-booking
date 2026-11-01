@@ -50,6 +50,6 @@ public class ReservationController {
 
     @DeleteMapping("/{id}")
     public void deleteReservation(@PathVariable Long id, Authentication authentication) {
-        reservationService.deleteById(id);
+        reservationService.deleteById(id, authentication.getName());
     }
 }

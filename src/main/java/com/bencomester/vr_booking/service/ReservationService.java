@@ -13,5 +13,5 @@ public interface ReservationService {
     List<ReservationDto> findAllByUser(String userEmail);
     ReservationDto findById(Long id);
     ReservationDto updateStatus(Long id, ReservationStatus status, String userEmail);
-    void deleteById(Long id);
+    void deleteById(Long id, String userEmail);
 }

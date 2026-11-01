@@ -31,6 +31,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
 
+    private static final int MAX_RESERVATION_LENGTH_IN_MINUTES = 240;
+
     private final ReservationRepository reservationRepository;
     private final TimetableService timetableService;
     private final HeadsetRepository headsetRepository;
@@ -40,10 +42,14 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public ReservationDto makeReservation(ReservationCreateDto reservationDto, String userEmail) {
-        testMinimumDuration(reservationDto.getStartTime(), reservationDto.getEndTime());
+        LocalDateTime start = reservationDto.getStartTime();
+        LocalDateTime end = reservationDto.getEndTime();
+        log.info("User '{}' attempting reservation for headsetId={} ({} -> {})",
+                userEmail, reservationDto.getHeadsetId(), start, end);
 
         validateReservationWindow(start, end);
         HeadsetEntity headsetEntity = getHeadsetEntityOrThrow(reservationDto.getHeadsetId());
+        testHeadsetAvailability(start, end, reservationDto.getHeadsetId());
 
         UserEntity user = getCallerOrThrow(userEmail);
 
@@ -51,8 +57,8 @@ public class ReservationServiceImpl implements ReservationService {
                 null,
                 user,
                 headsetEntity,
-                reservationDto.getStartTime(),
-                reservationDto.getEndTime(),
+                start,
+                end,
                 ReservationStatus.CONFIRMED);
 
         return reservationMapper.toDto(reservationRepository.save(reservation));
@@ -128,10 +134,6 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional(readOnly = true)
     public List<ReservationDto> findAllByUser(String userEmail) {
-        Long userId = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."))
-                .getId();
-        return reservationMapper.toDto(reservationRepository.findAllByUser_id(userId));
         Long userId = getCallerOrThrow(userEmail).getId();
         List<ReservationDto> list = reservationMapper.toDto(reservationRepository.findAllByUser_id(userId));
         return list;

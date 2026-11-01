@@ -31,7 +31,10 @@ export function AccountPage({
     const [profileForm, setProfileForm] = useState<UserUpdateDto>({
         fullName: user?.fullName || '',
         phoneNumber: user?.phoneNumber || '',
-        profilePictureUrl: user?.profilePictureUrl || '',
+        profilePictureUrl:
+            user?.profilePictureUrl && AVATAR_PRESETS.includes(user.profilePictureUrl)
+                ? user.profilePictureUrl
+                : DEFAULT_AVATAR_IMG,
     });
 
     useEffect(() => {
@@ -39,7 +42,10 @@ export function AccountPage({
             setProfileForm({
                 fullName: user.fullName || '',
                 phoneNumber: user.phoneNumber || '',
-                profilePictureUrl: user.profilePictureUrl || '',
+                profilePictureUrl:
+                    user.profilePictureUrl && AVATAR_PRESETS.includes(user.profilePictureUrl)
+                        ? user.profilePictureUrl
+                        : DEFAULT_AVATAR_IMG,
             });
         }
     }, [user]);
@@ -172,38 +178,35 @@ export function AccountPage({
 }
     />
     </label>
-    <label>
-    <span>Profile Picture URL:</span>
-    <input
-    type="url"
-    placeholder="https://..."
-    value={profileForm.profilePictureUrl || ''}
-    onChange={(e) =>
-    setProfileForm({
-        ...profileForm,
-        profilePictureUrl: e.target.value,
-    })
-}
-    />
-    </label>
 
-    <div className="avatar-preset-row">
-        <span>Quick Avatars:</span>
-    <div className="preset-list">
-        {AVATAR_PRESETS.map((presetUrl) => (
-                <button
-                    type="button"
-            key={presetUrl}
-            className="avatar-preset-btn"
-            onClick={() =>
-    setProfileForm({ ...profileForm, profilePictureUrl: presetUrl })
-}
->
-    <img src={presetUrl} alt="Preset Avatar" />
-        </button>
-))}
-    </div>
-    </div>
+                                <div className="avatar-preset-row">
+                                    <span>{t.chooseAvatarLabel}</span>
+                                    <div className="preset-list">
+                                        {AVATAR_PRESETS.map((presetUrl, index) => {
+                                            const isSelected = profileForm.profilePictureUrl === presetUrl;
+                                            return (
+                                                <button
+                                                    type="button"
+                                                    key={presetUrl}
+                                                    className={
+                                                        isSelected
+                                                            ? 'avatar-preset-btn selected'
+                                                            : 'avatar-preset-btn'
+                                                    }
+                                                    onClick={() =>
+                                                        setProfileForm({
+                                                            ...profileForm,
+                                                            profilePictureUrl: presetUrl,
+                                                        })
+                                                    }
+                                                    title={`Avatar #${index + 1}`}
+                                                >
+                                                    <img src={presetUrl} alt={`Preset Avatar ${index + 1}`} />
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
 
     <button type="submit" className="primary-btn">
         Save Profile Changes

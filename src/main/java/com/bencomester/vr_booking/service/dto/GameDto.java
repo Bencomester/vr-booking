@@ -1,9 +1,6 @@
 package com.bencomester.vr_booking.service.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,5 +23,6 @@ public class GameDto {
     private Integer steamAppId;
 
     @Size(max = 1000)
+    @Pattern(regexp = "^(https?://.*)?$", message = "Image URL must start with http:// or https://")
     private String imageUrl;
 }

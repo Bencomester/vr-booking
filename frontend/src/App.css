@@ -938,6 +938,7 @@ textarea:focus {
 .preset-list {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .avatar-preset-btn {
@@ -951,7 +952,11 @@ textarea:focus {
 
 .avatar-preset-btn:hover {
   border-color: var(--accent);
-  transform: scale(1.06);
+}
+
+.avatar-preset-btn.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
 }
 
 .avatar-preset-btn img {
