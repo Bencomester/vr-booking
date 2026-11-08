@@ -19,7 +19,7 @@ export function Navbar({ route, user, lang, onToggleLang, onNavigate }: Readonly
             <button type="button" className="brand-logo" onClick={() => onNavigate('HOME')}>
                 <span className="brand-icon">◈</span>
                 <span className="brand-text">
-                    AETHER<span>VR</span>
+                    RENT-A-<span>VR</span>
                 </span>
             </button>
 

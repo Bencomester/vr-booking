@@ -174,9 +174,17 @@ export function TimetablePage({
                                             style={{ left: `${leftPercent}%`, width: `${widthPercent}%` }}
                                             title={`${t.availableTooltip}: ${formatTimeShort24(block.startTime)} - ${formatTimeShort24(block.endTime)}`}
                                             onClick={() => {
+                                                const startShort = formatTimeShort24(block.startTime);
+                                                const blockEndShort = formatTimeShort24(block.endTime);
+                                                const startMins = clockToMinutes(startShort);
+                                                const blockEndMins = clockToMinutes(blockEndShort);
+                                                const defaultEndMins = Math.min(startMins + 60, blockEndMins);
+                                                const endH = String(Math.floor(defaultEndMins / 60)).padStart(2, '0');
+                                                const endM = String(defaultEndMins % 60).padStart(2, '0');
+
                                                 setSelectedDate(day.iso);
-                                                setBookingStartTime(formatTimeShort24(block.startTime));
-                                                setBookingEndTime(formatTimeShort24(block.endTime));
+                                                setBookingStartTime(startShort);
+                                                setBookingEndTime(`${endH}:${endM}`);
                                             }}
                                         >
                                             <span>

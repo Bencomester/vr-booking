@@ -69,10 +69,11 @@ public class Initializer implements CommandLineRunner {
         RoleEntity adminRole = roleRepository.findByName(UserRole.ADMIN)
                 .orElseGet(() -> roleRepository.save(new RoleEntity(null, UserRole.ADMIN)));
 
-        if (!userRepository.existsByEmail(adminEmail)) {
+        String normalizedAdminEmail = adminEmail.trim().toLowerCase( java.util.Locale.ROOT );
+        if (!userRepository.existsByEmail(normalizedAdminEmail)) {
             UserEntity admin = new UserEntity(
                     null,
-                    adminEmail,
+                    normalizedAdminEmail,
                     passwordEncoder.encode(adminPassword),
                     "John Smith",
                     "+36 30 555 0199",
