@@ -58,7 +58,7 @@ public class TimetableServiceImpl implements TimetableService {
             LocalDateTime cursor = block.getStartTime();
             LocalDateTime end = block.getEndTime();
             while (cursor.toLocalDate().isBefore(end.toLocalDate())) {
-                LocalDateTime endOfDay = cursor.toLocalDate().atTime(23, 59);
+                LocalDateTime endOfDay = cursor.toLocalDate().atTime(23, 45);
                 addIfLongEnough(dailyBlocks, cursor, endOfDay, block.getHeadsetId());
                 cursor = cursor.toLocalDate().plusDays(1).atStartOfDay();
             }
