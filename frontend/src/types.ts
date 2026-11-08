@@ -16,17 +16,17 @@ export type PageRoute =
     | 'ADMIN_RESERVATIONS';
 
 export const ROUTE_PATHS: Record<PageRoute, string> = {
-    HOME: '/',
-    TIMETABLE: '/timetable',
-    GAMES: '/games',
-    HEADSETS: '/headsets',
-    RIGS: '/rigs',
-    ACCOUNT: '/account',
-    ADMIN_AVAILABILITY: '/admin/availability',
-    ADMIN_HEADSETS: '/admin/headsets',
-    ADMIN_GAMES: '/admin/games',
-    ADMIN_RIGS: '/admin/rigs',
-    ADMIN_RESERVATIONS: '/admin/reservations',
+    HOME: '/vr',
+    TIMETABLE: '/vr/timetable',
+    GAMES: '/vr/games',
+    HEADSETS: '/vr/headsets',
+    RIGS: '/vr/rigs',
+    ACCOUNT: '/vr/account',
+    ADMIN_AVAILABILITY: '/vr/admin/availability',
+    ADMIN_HEADSETS: '/vr/admin/headsets',
+    ADMIN_GAMES: '/vr/admin/games',
+    ADMIN_RIGS: '/vr/admin/rigs',
+    ADMIN_RESERVATIONS: '/vr/admin/reservations',
 };
 
 export interface GameDto {

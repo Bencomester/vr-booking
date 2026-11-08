@@ -560,7 +560,7 @@ export function AdminStudioPage({
                                 <input
                                     type="number"
                                     step="100"
-                                    min="1"
+                                    min="100"
                                     value={headsetForm.hourlyPrice}
                                     onChange={(e) =>
                                         setHeadsetForm({
