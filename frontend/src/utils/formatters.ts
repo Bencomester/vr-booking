@@ -30,7 +30,7 @@ export function parsePathToRoute(pathname: string): PageRoute {
         clean = clean.slice(0, -1);
     }
     if (!clean) {
-        clean = '/';
+        clean = '/vr';
     }
     const entry = (Object.entries(ROUTE_PATHS) as [PageRoute, string][]).find(
         ([, path]) => path === clean

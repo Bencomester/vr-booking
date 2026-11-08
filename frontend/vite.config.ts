@@ -3,15 +3,8 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/",
+  base: "/vr/",
   server: {
     port: 5173,
-    // proxy: {
-    //   "/api": {
-    //     target: "http://localhost:8080/vr",
-    //     changeOrigin: true,
-    //     secure: false,
-    //   },
-    // },
   },
 });
